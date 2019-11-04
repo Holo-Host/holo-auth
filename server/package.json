@@ -1,0 +1,15 @@
+{
+  "main": "src/index.js",
+  "devDependencies": {
+    "@dollarshaveclub/cloudworker": "^0.1.2",
+    "form-data": "^2.5.1",
+    "standard": "^14.3.1",
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.9"
+  },
+  "scripts": {
+    "build": "webpack",
+    "format": "standard --fix",
+    "serve": "cloudworker --debug --kv-file SETTINGS=kv-settings.json --watch dist/main.js"
+  }
+}
