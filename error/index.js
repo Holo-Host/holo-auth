@@ -31,7 +31,9 @@
 
   const err = {
     "code": ((typeof qs.err !== undefined & typeof errorTable[qs.err] !== undefined ) ? qs.err : 501),
-    "text": errorTable[this.code]
+    get text() {
+	    return errorTable[this.code]
+    }
   }
 
   const domEl = {
