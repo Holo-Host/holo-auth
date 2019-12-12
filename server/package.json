@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "webpack",
-    "format": "standard --fix",
+    "format": "standard --fix src",
     "serve": "cloudworker --debug --kv-file SETTINGS=kv-settings.json --watch dist/main.js"
   }
 }
