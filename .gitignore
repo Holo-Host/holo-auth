@@ -1,0 +1,9 @@
+old-error
+old-success
+success-with-server
+
+success-with-server/node_modules
+success-with-server/dist
+success-with-server/pkg
+success-with-server/resources
+success-with-server/package-lock.json
