@@ -50,11 +50,11 @@
           clearInterval(timeinterval)
 
           // DEV HACK to test out Network Sucess Page :
-          delay(500)
-            .then(() => {
-              buttons.goToHPAdmin.href = HOST_HP_ADMIN_URL
-              updateUiStep(6)
-            })
+          // delay(500)
+          //   .then(() => {
+          //     buttons.goToHPAdmin.href = HOST_HP_ADMIN_URL
+          //     updateUiStep(6)
+          //   })
         }
       }
       updateClock()
@@ -106,7 +106,7 @@
 
       console.log('Network Setup Deadline : ', deadline)
       actions.countdownTimer(deadline)
-      // actions.checkHpAdminState()
+      actions.checkHpAdminState()
     }
   }
 
