@@ -1,6 +1,7 @@
 (async () => {
   /* Fetch and Parse Location */
-  const hpAdminUrl = (hpAdminQueryString => {
+  const currentQueryString = window.location.search.substr(1).split('&')
+  const hpAdminUrl = ((hpAdminQueryString = currentQueryString) => {
     if (hpAdminQueryString === '') return {}
     const queryStringKv = {}
     for (let i = 0; i < hpAdminQueryString.length; ++i) {
@@ -9,18 +10,15 @@
       queryStringKv[queryStringParam[0]] = decodeURIComponent(queryStringParam[1].replace(/\+/g, ' '))
     }
     return queryStringKv
-  })(window.location.search.substr(1).split('&'))
+  })()
 
   if (hpAdminUrl && !hpAdminUrl.url) {
-    console.log('No HoloPort URL found in the query')
-    return null
+    throw new Error('No HoloPort URL found in the query')
   }
 
   /* Global Variables */
   const HOST_HP_ADMIN_URL = 'http://' + hpAdminUrl.url.replace(/^https?:\/\//, '').replace(/\/$/, '') + '/'
   let stepTracker
-
-  console.log('HOST_HP_ADMIN_URL: ', HOST_HP_ADMIN_URL)
 
   /* Parse HTML elements */
   const buttons = {
@@ -83,7 +81,7 @@
   }
 
   // /* Bind actions to buttons */
-  // buttons.goToHPAdmin.onclick = actions.goToHPAdmin;
+  buttons.goToHPAdmin.onclick = actions.goToHPAdmin
 
   /** Helper Functions :
   * =============================
@@ -155,7 +153,6 @@
 
       const failure = e => {
         console.log(`Polling: Encountered error when calling Host's HP Admin URL at ${HOST_HP_ADMIN_URL}. Re-fetching...`)
-        // console.log(`Domain Error : `, e)
         delay(interval)
           .then(fetchUrl)
       }
