@@ -136,22 +136,22 @@
     }
 
     return new Promise(resolve => {
-      const success = r => {
-        if (r.status === 200) {
-          console.log('HP Admin Data Result : ', r)
+      const success = result => {
+        if (result.status === 200) {
+          console.log('HP Admin Data Result : ', result)
           // Once Host HP Admin URL returns status 200, setup link and progress to final page.
           buttons.goToHPAdmin.href = HOST_HP_ADMIN_URL
           console.log(`Polling: Host's HP Admin URL at ${HOST_HP_ADMIN_URL} is ready and served.`)
-          resolve(r)
+          resolve(result)
         } else {
           console.log(`Polling: Host's HP Admin URL at ${HOST_HP_ADMIN_URL} is not yet served. Re-fetching...`)
-          console.log(`Domain Status : `, r.status)
+          console.log(`Domain Status : `, result.status)
           delay(interval)
             .then(fetchUrl)
         }
       }
 
-      const failure = e => {
+      const failure = () => {
         console.log(`Polling: Encountered error when calling Host's HP Admin URL at ${HOST_HP_ADMIN_URL}. Re-fetching...`)
         delay(interval)
           .then(fetchUrl)
