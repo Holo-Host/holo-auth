@@ -1,3 +1,11 @@
+/* Imports */
+
+@font-face {
+  font-family: 'Circular';
+  src: local('Circular'), url(../assets/fonts/lineto-circular-book.ttf) format('truetype');
+}
+
+
 /* Globals */
 
 html {

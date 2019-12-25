@@ -128,7 +128,11 @@
     const start = Date.now()
     const fetchOptions = {
       cache: 'no-cache',
-      mode: 'no-cors'
+      mode: 'no-cors',
+      contentType: 'application/json',
+      headers: {
+        'Access-Control-Allow-Origin': '*'
+      }
     }
 
     if (timeout !== 0 && Date.now() - start > timeout) {

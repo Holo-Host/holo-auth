@@ -1,7 +1,15 @@
+/* Imports */
+
+@font-face {
+  font-family: 'Circular';
+  src: local('Circular'), url(../assets/fonts/lineto-circular-book.ttf) format('truetype');
+}
+
+
 /* Globals */
 
 html {
-  font-family: 'CircularStd', 'Segoe UI', Helvetica, Arial, sans-serif,
+  font-family: 'Circular', 'Segoe UI', Helvetica, Arial, sans-serif,
     'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 14px;
   line-height: 1.5;
