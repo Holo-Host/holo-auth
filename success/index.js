@@ -126,13 +126,17 @@
    */
   const checkHpAdminUrl = (url, interval, timeout) => {
     const start = Date.now()
+    // const data = {}
+
     const fetchOptions = {
+      method: 'GET', // POST
       cache: 'no-cache',
-      mode: 'no-cors',
-      contentType: 'application/json',
+      mode: 'cors',
       headers: {
-        'Access-Control-Allow-Origin': '*'
-      }
+        'Content-Type': 'application/json '
+      },
+      referrerPolicy: 'no-referrer' //
+      // body: JSON.stringify(data) // body data type must match "Content-Type" header
     }
 
     if (timeout !== 0 && Date.now() - start > timeout) {
@@ -140,31 +144,36 @@
     }
 
     return new Promise(resolve => {
-      const success = result => {
-        if (result.status === 200) {
-          console.log('HP Admin Data Result : ', result)
-          // Once Host HP Admin URL returns status 200, setup link and progress to final page.
+      const success = r => {
+        // NOTE: DEV/TEST MODE. Below line is for test fetch call. :
+        // if (r.status === 200) {
+
+        // NOTE: When HPOS GET result.status === 401, HPOS is reachible.
+        if (r.status === 401) {
+          console.log('HP Admin Data Result : ', r)
+          // Once Host HP Admin URL returns correct status, setup link and progress to final page.
           buttons.goToHPAdmin.href = HOST_HP_ADMIN_URL
           console.log(`Polling: Host's HP Admin URL at ${HOST_HP_ADMIN_URL} is ready and served.`)
-          resolve(result)
+          resolve(r)
         } else {
           console.log(`Polling: Host's HP Admin URL at ${HOST_HP_ADMIN_URL} is not yet served. Re-fetching...`)
-          console.log(`Domain Status : `, result.status)
+          console.log(`Domain Status : `, r.status)
           delay(interval)
             .then(fetchUrl)
         }
       }
 
-      const failure = () => {
+      const failure = e => {
+        console.log(`Error : `, e)
         console.log(`Polling: Encountered error when calling Host's HP Admin URL at ${HOST_HP_ADMIN_URL}. Re-fetching...`)
         delay(interval)
           .then(fetchUrl)
       }
 
       const fetchUrl = () => {
-        // Test:
-        // return fetch('https://google.com', fetchOptions)
-        return fetch(url + 'ping/', fetchOptions)
+        // NOTE: DEV/TEST MODE. Below line is a test. - Server must have 'Access-Control' type headers set to be successful.:
+        // return fetch('https://api.github.com/', fetchOptions)
+        return fetch(url + 'api/v1', fetchOptions)
           .then(success)
           .catch(failure)
       }
