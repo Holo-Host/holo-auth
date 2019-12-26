@@ -30,6 +30,12 @@
   */
   const actions = {
     onLoad: () => {
+      if (!validateScreenSize()) {
+        console.log('!validateScreenSize() :', !validateScreenSize())
+        alert('Please visit this site on a desktop or laptop computer to continue.')
+        return null
+      }
+
       /* Set setTracker to default Page (page 5) */
       stepTracker = 5
       constantCheck()
@@ -115,6 +121,14 @@
     return new Promise(resolve => {
       setTimeout(resolve, time)
     })
+  }
+
+  /**
+   * Validate device by size of screen
+   */
+  const validateScreenSize = () => {
+    /* Detect whether on laptop or desktop */
+    return (window.screen.availWidth >= 1024 && window.screen.availHeight >= 768)
   }
 
   /**
