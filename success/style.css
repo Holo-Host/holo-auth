@@ -66,6 +66,11 @@ p.break-text span {
   flex: 1;
 }
 
+.divider {
+  margin: 0 0.5rem;
+}
+
+
 /* Colors */
 
 .error-red {
@@ -482,8 +487,13 @@ body.step5 .stepButton {
   margin-top: 90vh;
   width: 22vw;
   border-width: 0.2rem;
-  text-decoration-line: underline;
+  flex-flow: row !important;
+}
+
+.link {
+  text-decoration-line: none;
   color: #00838d;
   font-weight: bold;
-  font-size: calc(0.21rem + 1vw);
+  font-size: calc(0.8rem + 0.3vw);
+  letter-spacing: 0.1rem;
 }
