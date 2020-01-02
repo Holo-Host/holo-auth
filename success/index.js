@@ -17,7 +17,7 @@
   }
 
   /* Global Variables */
-  const HOST_HP_ADMIN_URL = 'http://' + hpAdminUrl.url.replace(/^https?:\/\//, '').replace(/\/$/, '') + '/'
+  const HOST_HP_ADMIN_URL = hpAdminUrl.url
   let stepTracker
 
   /* Parse HTML elements */
