@@ -31,14 +31,13 @@
   const actions = {
     onLoad: () => {
       if (!validateScreenSize()) {
-        console.log('!validateScreenSize() :', !validateScreenSize())
-        alert('Please visit this site on a desktop or laptop computer to continue.')
-        return null
+        const confirmed = confirm('This experience has not been optimized for mobile devices. Please continue only if you are using a laptop or PC.\n\nContinuing on a mobile device may result in unexpected issues.')
+        if (confirmed !== true) return null
+      } else {
+        /* Set setTracker to default Page (page 5) */
+        stepTracker = 5
+        constantCheck()
       }
-
-      /* Set setTracker to default Page (page 5) */
-      stepTracker = 5
-      constantCheck()
     },
     countdownTimer: endtime => {
       // inlineVariables.timerMessage.style.display = 'none'
@@ -103,9 +102,9 @@
   const constantCheck = () => {
     if (stepTracker === 5) {
       /* Start Timer */
-      const deadline = addMinutesToDateTime(new Date(), 30)
+      const deadline = addMinutesToDateTime(new Date(), 2)
 
-      /* DEV HACK: exchange 30min for 10 sec timer during dev mode: */
+      /* DEV HACK: exchange 2min for 10 sec timer during dev mode: */
       // const deadline = addMinutesToDateTime(new Date(), 0.1)
 
       console.log('Network Setup Deadline : ', deadline)
@@ -128,7 +127,7 @@
    */
   const validateScreenSize = () => {
     /* Detect whether on laptop or desktop */
-    return (window.screen.availWidth >= 1024 && window.screen.availHeight >= 768)
+    return (window.screen.availWidth >= 768)
   }
 
   /**
