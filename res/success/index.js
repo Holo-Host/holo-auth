@@ -17,7 +17,7 @@
   }
 
   /* Global Variables */
-  const HOST_HP_ADMIN_URL = 'http://' + hpAdminUrl.url.replace(/^https?:\/\//, '').replace(/\/$/, '') + '/'
+  const HOST_HP_ADMIN_URL = hpAdminUrl.url
   let stepTracker
 
   /* Parse HTML elements */
@@ -186,7 +186,7 @@
       const fetchUrl = () => {
         // NOTE: DEV/TEST MODE. Below line is a test. - Server must have 'Access-Control' type headers set to be successful.:
         // return fetch('https://api.github.com/', fetchOptions)
-        return fetch(url + 'api/v1', fetchOptions)
+        return fetch(url + '/api/v1', fetchOptions)
           .then(success)
           .catch(failure)
       }

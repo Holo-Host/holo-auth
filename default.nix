@@ -1,25 +1,17 @@
-{ pkgs ? import ./pkgs.nix {} }:
-
-with pkgs;
-
+{ pkgs ? import ./nixpkgs.nix {} }: with pkgs;
 
 {
-  hp-status-host-web = rec {
-    name = "hp-status-host-web";
-    src = gitignoreSource ./.;
+  hpstatus = stdenv.mkDerivation {
+    name = "hpstatus";
+    src = gitignoreSource ./res;
 
     buildPhase = ''
-      cp -r error/ target/error/
-      cp -r success/ target/success/
+      cp -r $PWD $out
     '';
 
     installPhase = ''
-      mv target $out
-
       mkdir -p $out/nix-support
       echo "doc manual $out" >> $out/nix-support/hydra-build-products
     '';
-
-    doCheck = false;
   };
 }
