@@ -2,3 +2,8 @@ dist/
 node_modules/
 result
 worker/
+
+# misc & test files
+success-with-server/
+old-success/
+old-error/
