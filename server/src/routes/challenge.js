@@ -20,17 +20,20 @@ const isWhitelisted = async email => {
 }
 
 const sendEmail = async (email, url) => {
-  const apiKey = await SETTINGS.get('sendgrid_api_key')
+  const serverToken = await SETTINGS.get('postmark_server_token')
   const payload = {
-    from: 'no-reply@holo.host',
-    personalizations: { to: { email: email } },
-    substitutions: { '{{url}}': url },
-    template_id: await SETTINGS.get('sendgrid_template_id')
+    From: 'no-reply@holo.host',
+    To: email,
+    TemplateAlias: 'auth-challenge',
+    TemplateModel: { 'url': url }
   }
 
-  return fetch('https://api.sendgrid.com/v3/mail/send', {
+  return fetch('https://api.postmarkapp.com/email/withTemplate', {
     method: 'POST',
-    headers: { authorization: `Bearer ${apiKey}` },
+    headers: {
+     accept: 'application/json',
+     'x-postmark-server-token': serverToken
+    },
     body: JSON.stringify(payload)
   })
 }
