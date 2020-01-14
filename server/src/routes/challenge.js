@@ -1,4 +1,4 @@
-/* global SETTINGS, fetch */
+/* global SETTINGS, WHITELIST, fetch */
 
 import * as hmac from '../hmac'
 import { respond } from '../util'
@@ -6,17 +6,8 @@ import { respond } from '../util'
 const VALIDITY_PERIOD = 7 * 24 * 60 * 60 * 1000 // 7 days
 
 const isWhitelisted = async email => {
-  const apiKey = await SETTINGS.get('freshdesk_api_key')
-  const credentials = Buffer.from(`${apiKey}:x`).toString('base64')
-  const url = new URL('https://holo.freshdesk.com/api/v2/contacts')
-
-  url.searchParams.set('email', email)
-
-  const response = await fetch(url.toString(), {
-    headers: { authorization: `Basic ${credentials}` }
-  })
-
-  return response.status === 200
+  if (email.endsWith('@holo.host')) { return true }
+  return await WHITELIST.get(email) !== null
 }
 
 const sendEmail = async (email, url) => {
