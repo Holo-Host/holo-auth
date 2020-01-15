@@ -1,9 +1,9 @@
 account_id = "18ff2b4e6205b938652998cfca0d8cff"
 zone_id = "35f34e8f9d04ef8c87283ea9fb812989"
 
-name = "hpstatus"
+name = "holo-auth-status"
 type = "webpack"
-route = "hpstatus.holo.host/*"
+route = "auth-status.holo.host/*"
 
 [site]
 bucket = "./res"

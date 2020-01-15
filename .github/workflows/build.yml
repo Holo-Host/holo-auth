@@ -4,7 +4,7 @@ on:
     branches:
       - master
 jobs:
-  hpstatus:
+  holo-auth:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -15,6 +15,7 @@ jobs:
             --option trusted-public-keys \
               'cache.holo.host-1:lNXIXtJgS9Iuw4Cu6X0HINLu9sTfcjEntnrgwMQIMcE=
                cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=' \
-            --run 'wrangler publish'
+            --run '(cd server; wrangler publish) 
+                   (cd status; wrangler publish)'
         env:
           CF_API_TOKEN: ${{ secrets.cf_api_token }}
