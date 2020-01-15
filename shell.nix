@@ -1,7 +1,13 @@
-{ pkgs ? import ./pkgs.nix {} }:
+{ pkgs ? import ./nixpkgs.nix {} }:
 
 with pkgs;
 
 mkShell {
-  buildInputs = [ nodejs python wrangler ];
+  inputsFrom = lib.attrValues (import ./. { inherit pkgs; });
+
+  buildInputs = [
+    nodejs
+    python
+    wrangler
+  ];
 }
