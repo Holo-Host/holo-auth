@@ -13,7 +13,7 @@ const isWhitelisted = async email => {
 const sendEmail = async (email, url) => {
   const serverToken = await SETTINGS.get('postmark_server_token')
   const payload = {
-    From: 'no-reply@holo.host',
+    From: 'Holo <no-reply@holo.host>',
     To: email,
     TemplateAlias: 'auth-challenge',
     TemplateModel: { 'url': url }
