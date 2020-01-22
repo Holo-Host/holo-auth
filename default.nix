@@ -9,7 +9,8 @@ in
 {
   holo-auth-client = buildRustPackage rustPlatform {
     name = "holo-auth-client";
-    src = gitignoreSource ./client;
+    src = gitignoreSource ./.;
+    cargoDir = "client";
 
     nativeBuildInputs = [ pkgconfig ];
     buildInputs = [ openssl ];
