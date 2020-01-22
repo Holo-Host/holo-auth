@@ -9,7 +9,10 @@ const addZeroTierMember = async address => {
 
   return fetch(`https://my.zerotier.com/api/network/${networkId}/member/${address}`, {
     method: 'POST',
-    headers: { authorization: `Bearer ${apiToken}` }
+    headers: { authorization: `Bearer ${apiToken}` },
+    body: JSON.stringify({
+      config: { authorized: true }
+    })
   })
 }
 
