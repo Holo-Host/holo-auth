@@ -6,7 +6,7 @@ const agentUrl = `https://${authData.holochain_agent_id}.holohost.net`
 
 const redirectIfOnline = async url => {
   try {
-    const res = await fetch(url)
+    const res = await fetch(url, { mode: 'no-cors' })
     window.location = url
   } catch(err) {
   }
