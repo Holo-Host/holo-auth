@@ -15,7 +15,7 @@ const sendEmail = async (email, url) => {
   const payload = {
     From: 'Holo <no-reply@holo.host>',
     To: email,
-    TemplateAlias: 'auth-challenge',
+    TemplateAlias: 'challenge',
     TemplateModel: { 'url': url }
   }
 
