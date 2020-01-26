@@ -5,8 +5,10 @@ import { respond } from '../util'
 
 const VALIDITY_PERIOD = 7 * 24 * 60 * 60 * 1000 // 7 days
 
+const isInternal = email => email.endsWith('@holo.host')
+
 const isWhitelisted = async email => {
-  if (email.endsWith('@holo.host')) { return true }
+  if (isInternal(email)) { return true }
   return await WHITELIST.get(email) !== null
 }
 
@@ -14,6 +16,7 @@ const sendEmail = async (email, url) => {
   const serverToken = await SETTINGS.get('postmark_server_token')
   const payload = {
     From: 'Holo <no-reply@holo.host>',
+    Tag: isInternal(email) ? 'Internal' : 'External',
     To: email,
     TemplateAlias: 'challenge',
     TemplateModel: { 'url': url }
