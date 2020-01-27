@@ -12,14 +12,14 @@ const isWhitelisted = async email => {
   return await WHITELIST.get(email) !== null
 }
 
-const sendEmail = async (email, url) => {
+const emailChallenge = async (email, model) => {
   const serverToken = await SETTINGS.get('postmark_server_token')
   const payload = {
     From: 'Holo <no-reply@holo.host>',
     Tag: isInternal(email) ? 'Internal' : 'External',
     To: email,
     TemplateAlias: 'challenge',
-    TemplateModel: { 'url': url }
+    TemplateModel: model
   }
 
   return fetch('https://api.postmarkapp.com/email/withTemplate', {
@@ -51,7 +51,11 @@ const handle = async req => {
   const payload = await req.json()
 
   if (!await isWhitelisted(payload.email)) { return respond(401) }
-  return sendEmail(payload.email, await responseUrl(baseUrl, payload))
+
+  return emailChallenge(payload.email, {
+    ...payload,
+    response_url: await responseUrl(baseUrl, payload)
+  })
 }
 
 export { handle }
