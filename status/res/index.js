@@ -14,7 +14,8 @@ const redirectIfOnline = async url => {
 
 const $minutes = document.getElementById('minutes')
 const $seconds = document.getElementById('seconds')
-const $stepBox = document.getElementById('stepBox')
+const $stepBoxDefault = document.getElementById('stepBox')
+const $stepBoxTimeUp = document.getElementById('stepBox-time-up')
 
 const clockPad = n => n.toString().padStart(2, '0')
 
@@ -25,14 +26,8 @@ const updateCountdown = estimate => {
   $minutes.textContent = clockPad(minutes)
   $seconds.textContent = clockPad(seconds)
   if (minutes === 0 && seconds === 0) {
-    $stepBox.innerHTML = `
-      <div class="stepLabel step5">
-        <p class="subheader-text-bookend text-white">
-          Hmm. This is taking longer than normal. Please leave this window open for another few minutes and check back later. 
-          If you're still not re-directed to your HoloPort admin panel by then, please contact <a href="https://forum.holo.host" target="_blank" class="text-white underline">customer service</a>.
-        </p>
-      </div>
-    `
+    $stepBoxDefault.style.display = 'none'
+    $stepBoxTimeUp.style.display = 'flex'
   }
 }
 
