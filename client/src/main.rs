@@ -1,4 +1,3 @@
-use std::convert::TryFrom;
 use std::{env, fs};
 
 use ed25519_dalek::*;
@@ -31,14 +30,12 @@ fn main() -> Fallible<()> {
     let holochain_secret_key = SecretKey::from_bytes(&seed)?;
     let holochain_public_key = PublicKey::from(&holochain_secret_key);
 
-    let zerotier_identity =
-        Identity::try_from(&fs::read_to_string("/var/lib/zerotier-one/identity.secret")?[..])?;
-    let zerotier_address = zerotier_identity.address.clone();
+    let zerotier_identity = Identity::read_default()?;
 
     let payload = Payload {
         email: settings.admin.email,
         holochain_agent_id: holochain_public_key,
-        zerotier_address: zerotier_address,
+        zerotier_address: zerotier_identity.address,
     };
 
     let payload_bytes = serde_json::to_vec(&payload)?;

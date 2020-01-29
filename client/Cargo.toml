@@ -15,5 +15,5 @@ git = "https://github.com/Holo-Host/hpos-config"
 branch = "develop"
 
 [dependencies.zerotier]
-git = "https://github.com/transumption-unstable/zerotier"
-branch = "2019-12-18-nix"
+git = "https://github.com/transumption/zerotier-rust"
+branch = "release"
