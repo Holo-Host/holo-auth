@@ -180,6 +180,10 @@ ul li {
   line-height: calc(1rem + 1.5vw);
 }
 
+#countdown > div { visibility: hidden }
+#countdown[data-state="pending"] .countdown-pending { visibility: visible }
+#countdown[data-state="overtime"] .countdown-overtime { visibility: visible }
+
 /* Timer Components */
 
 .timer-block {

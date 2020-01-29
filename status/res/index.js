@@ -12,23 +12,23 @@ const redirectIfOnline = async url => {
   }
 }
 
-const $minutes = document.getElementById('minutes')
-const $seconds = document.getElementById('seconds')
-const $stepBoxDefault = document.getElementById('stepBox')
-const $stepBoxTimeUp = document.getElementById('stepBox-time-up')
+const $countdown = document.getElementById('countdown')
+const $minutes = document.getElementById('timer-minutes')
+const $seconds = document.getElementById('timer-seconds')
 
 const clockPad = n => n.toString().padStart(2, '0')
 
 const updateCountdown = estimate => {
   const delta = new Date(Math.max(0, estimate - Date.now()))
+
   const minutes = delta.getMinutes()
   const seconds = delta.getSeconds()
+
   $minutes.textContent = clockPad(minutes)
   $seconds.textContent = clockPad(seconds)
-  if (minutes === 0 && seconds === 0) {
-    $stepBoxDefault.style.display = 'none'
-    $stepBoxTimeUp.style.display = 'flex'
-  }
+
+  if (minutes === 0 && seconds === 0)
+    $countdown.dataset.state = 'overtime'
 }
 
 (async () => {
