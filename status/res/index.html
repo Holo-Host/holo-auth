@@ -1,83 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta http-equiv="X-UA-Compatible" content="ie=edge">
-      <title>Holo Quickstart</title>
-      <link rel="stylesheet" href="style.css">
-    </head>
-    <body id='container-fluid' class="step5">
-      <aside id='greeting-container-bookend' class="stepHeader step5 step6">  
-        <div class="stepLabel step5 step6 greeting-wrapper-bookend ">
-          <img id="holo-banner-wrapper" class="stepLabel step5 step6" src='../assets/images/holo-banner.svg' />            
-          <h1 class="stepLabel step5 greeting"> Your HoloPort is making it’s first contact!</h1>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Holo Quickstart</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body class="container-fluid">
+    <aside class="greeting-container-bookend elem">
+      <div class="greeting-wrapper-bookend elem">
+        <img class="holo-banner-wrapper elem" src="assets/images/holo-banner.svg" />
+        <h1 class="greeting elem">Your HoloPort is making its first contact!</h1>
+        <p class="help-link subheader-text elem">
+          <a class="link" href="https://forum.holo.host" target="_blank">Support Forum</a>
+          <span class="divider">|</span>
+          <a class="link" href="mailto:help@holo.host" target="_blank">help@holo.host</a>
+        </p>
+      </div>
 
-          <h1 class="stepLabel step6 greeting"> Your HoloPort is connected!</h1>
-          <p class="stepLabel step5 step6 help-link subheader-text">
-            <a class="link" href="https://forum.holo.host" target="_blank">Support Forum </a>
-            <span class="divider">|</span>
-            <a class="link" href="mailto:help@holo.host" target="_blank"> help@holo.host</a>
-          </p>
-        </div>
+      <img class="holo-brand-wrapper elem" src="assets/icons/holo-logo-avatar.svg" />
+    </aside>
+    <main class="content-container-bookend elem">
+      <div class="content-wrapper">
+        <div class="card-wrapper elem">
+          <div class="card-transparent">
+            <div class="header elem">
+              <h2 class="label-info-bookend">This could take a while.</h2>
+            </div>
 
-        <img id="holo-brand-wrapper" class="stepLabel step5 step6" src='../assets/icons/holo-logo-avatar.svg' />
-      </aside>
-      <main id='content-container-bookend' class="stepHeader step5 step6">
-        <div class="content-wrapper bookend">
-          <div class="stepHeader step5 step6 card-wrapper">
-            <div class="card-transparent">
-
-              <div class="stepLabel step5 step5-header">
-                <h2 class="step-label-info-bookend text-white">This could take a few minutes.</h2>
-              </div>
-
-              <div id="stepBox" class="stepBox step5">
+            <div id="countdown" class="elem" data-state="pending">
+              <div class="countdown-pending">
                 <div class="timer-block">
                   <div class="timer-block-item">
                     <ul class="timer-list">
-                      <li class="timer-list-item"><span id="placeholder-hour" class="timer-text pageHeader text-white">00</span></li>
-                      <li class="timer-list-item"><span class="timer-text pageHeader text-white">:</span></li>
-
-                      <li class="timer-list-item"><span id="minutes" class="timer-text pageHeader text-white">10</span></li>
-                      <li class="timer-list-item"><span class="timer-text pageHeader text-white">:</span></li>
-                      <li class="timer-list-item"><span id="seconds" class="timer-text pageHeader text-white">00</span></li>
+                      <li class="timer-list-item"><span class="timer-text">00</span></li>
+                      <li class="timer-list-item"><span class="timer-text">:</span></li>
+                      <li class="timer-list-item"><span id="timer-minutes" class="timer-text">10</span></li>
+                      <li class="timer-list-item"><span class="timer-text">:</span></li>
+                      <li class="timer-list-item"><span id="timer-seconds" class="timer-text">00</span></li>
                     </ul>
                   </div>
                 </div>
-                <div class="stepLabel step5">
-                  <p class="subheader-text-bookend text-white"> Once your HoloPort is connected to the Holo network you will automatically be redirected to your HoloPort admin panel.</p>
-                </div>
-                <div class="stepLabel step5 block-bottom-text">
-                  <p class='subheader-text-bookend text-white'>Note: If you don’t receive an email within 2 minutes, please reach out to <a href="https://forum.holo.host" target="_blank" class="text-white underline">customer service</a>.</p>
-                </div>
+                <p class="subheader-text-bookend elem">Once your HoloPort is connected to the Holo network, you will automatically be redirected to your HoloPort admin panel.</p>
               </div>
-
-              <div id="stepBox-time-up" class="stepBox step5" style="display: none">
-                <div class="stepLabel step5">
-                  <p class="subheader-text-bookend text-white">
-                    Hmm. This is taking longer than normal. Please leave this window open for another few minutes and check back later. 
-                    If you're still not re-directed to your HoloPort admin panel by then, please contact <a href="https://forum.holo.host" target="_blank" class="text-white underline">customer service</a>.
-                  </p>
-                </div>
-              </div>
-
-              <div class="stepLabel step6 step6-header">
-                <div class="image-block-item">
-                  <img src="../assets/icons/rocket-icon.svg" class="image-block-icon" />
-                </div>
-                <h2 class="step-label-info-bookend text-white">Now you can explore HP Admin to manage your HoloPort</h2>
-              </div>
-              <div class="stepBox step6">
-                <div class="hp-admin-advance-button-wrapper">
-                  <a id="hp-admin-advance-button" class="btn button-font action-button" target="_blank"><span class="button-text">Go to HP Admin</span></a>
-                </div>
+              <div class="countdown-overtime">
+                <p class="subheader-text-bookend">
+                  Hmm. This is taking longer than normal. Please leave this window open for another few minutes and check back later.
+                  If you're still not redirected to your HoloPort admin panel by then, please contact <a href="https://forum.holo.host" target="_blank" class="text-white underline">customer service</a>.
+                </p>
               </div>
             </div>
           </div>
         </div>
-        <img id="holoport-flying-bookend" class="stepLabel step5 step6" src='../assets/images/hports-flying-transparent.png' />
-      </main>
-      <script src="index.js"></script>
-    </body>
+      </div>
+      <img class="holoport-flying-bookend elem" src="assets/images/hports-flying-transparent.png" />
+    </main>
+    <script src="index.js"></script>
+  </body>
 </html>
