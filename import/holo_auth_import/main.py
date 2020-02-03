@@ -123,7 +123,7 @@ def main():
                         'name': agent_id
                     })
             except ValueError:
-                logger.warning("Couldn't import ZeroTier metadata: " + contact['email'])
+                logger.warning("Couldn't update ZeroTier metadata: " + contact['email'])
 
 
 if __name__ == '__main__':
