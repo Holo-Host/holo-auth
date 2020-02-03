@@ -5,10 +5,16 @@ version = "0.0.0"
 
 [dependencies]
 ed25519-dalek = { version = "1.0.0-pre.1", features = ["serde"] }
-failure = "0.1.5"
-reqwest = "0.9.11"
-serde = { version = "1.0.89", features = ["derive"] }
-serde_json = "1.0.39"
+failure = "0.1"
+lazy_static = "1"
+reqwest = { version = "0.10", features = ["json"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "0.2", features = ["full"] }
+tracing = "0.1"
+tracing-futures = "0.2"
+tracing-subscriber = "0.2.0-alpha.2"
+uuid = { version = "0.8", features = ["serde", "v4"] }
 
 [dependencies.hpos-config-core]
 git = "https://github.com/Holo-Host/hpos-config"
