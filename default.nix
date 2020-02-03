@@ -18,9 +18,9 @@ in
     meta.platforms = lib.platforms.linux;
   };
 
-  holo-auth-freshdesk-import = with python37Packages; buildPythonApplication {
-    name = "holo-auth-freshdesk-import";
-    src = gitignoreSource ./freshdesk-import;
+  holo-auth-import = with python37Packages; buildPythonApplication {
+    name = "holo-auth-import";
+    src = gitignoreSource ./import;
 
     propagatedBuildInputs = [ requests ];
   };
