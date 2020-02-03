@@ -49,7 +49,8 @@ const responseUrl = async (baseUrl, payload) => {
 
 const handle = async req => {
   const baseUrl = await SETTINGS.get('response_base_url') || new URL('/v1/response', req.parsedURL.origin)
-  const { email, ...payload } = await req.json()
+  const payload = await req.json()
+  const { email } = payload
 
   if (!await isWhitelisted(email)) {
     return sendEmail(email, 'not-whitelisted', {})
