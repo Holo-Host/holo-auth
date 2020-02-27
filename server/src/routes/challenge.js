@@ -9,7 +9,7 @@ const isInternal = email => email.endsWith('@holo.host')
 
 const isWhitelisted = async email => {
   if (isInternal(email)) { return true }
-  return await WHITELIST.get(email) !== null
+  return await WHITELIST.get(email.toLowerCase()) !== null
 }
 
 const sendEmail = async (email, alias, model) => {
