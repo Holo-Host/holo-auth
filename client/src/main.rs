@@ -1,4 +1,3 @@
-use anyhow::{anyhow, Result};
 use std::time::Duration;
 use std::{env, fs, thread};
 
@@ -8,6 +7,7 @@ use serde::*;
 use uuid::Uuid;
 use zerotier::Identity;
 
+use failure::*;
 use lazy_static::*;
 use reqwest::Client;
 use tracing::*;
@@ -40,38 +40,40 @@ struct Payload {
     zerotier_address: zerotier::Address,
 }
 
-async fn try_auth() -> Result<()> {
+#[derive(Debug, Fail)]
+pub enum AuthError {
+    #[fail(display = "Invalid config version used. please upgrade to hpos-config v2")]
+    ConfigVersionError,
+}
+
+async fn try_auth() -> Fallible<()> {
     let config_path = env::var("HPOS_CONFIG_PATH")?;
     let config_json = fs::read(config_path)?;
     match serde_json::from_slice(&config_json)? {
-        Config::V1 { seed, settings, .. } => {
+        Config::V2 { seed, settings, .. } => {
             let holochain_secret_key = SecretKey::from_bytes(&seed)?;
             let holochain_public_key = PublicKey::from(&holochain_secret_key);
-            match Identity::read_default() {
-                Ok(zerotier_identity) => {
-                    let payload = Payload {
-                        email: settings.admin.email,
-                        holochain_agent_id: holochain_public_key,
-                        zerotier_address: zerotier_identity.address,
-                    };
-                    let resp = CLIENT
-                        .post("https://auth-server.holo.host/v1/challenge")
-                        .json(&payload)
-                        .send()
-                        .await?;
-                    let promise: PostmarkPromise = resp.json().await?;
-                    info!("Postmark message ID: {}", promise.message_id);
-                }
-                Err(e) => return Err(anyhow!("{:?}", e)),
-            }
+            let zerotier_identity = Identity::read_default()?;
+            let payload = Payload {
+                email: settings.admin.email,
+                holochain_agent_id: holochain_public_key,
+                zerotier_address: zerotier_identity.address,
+            };
+            let resp = CLIENT
+                .post("https://auth-server.holo.host/v1/challenge")
+                .json(&payload)
+                .send()
+                .await?;
+            let promise: PostmarkPromise = resp.json().await?;
+            info!("Postmark message ID: {}", promise.message_id);
         }
-        other => return Err(anyhow!("Invalid config version: {:?}", other)),
+        Config::V1 { .. } => return Err(AuthError::ConfigVersionError.into()),
     }
     Ok(())
 }
 
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() -> Fallible<()> {
     let subscriber = FmtSubscriber::builder()
         .with_env_filter(EnvFilter::from_default_env())
         .finish();

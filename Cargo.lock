@@ -27,12 +27,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "anyhow"
-version = "1.0.42"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "595d3cfa7a60d4555cb5067b99f07142a08ea778de5cf993f7b75c7d8fabc486"
-
-[[package]]
 name = "argon2min"
 version = "0.3.0"
 source = "git+https://github.com/Holo-Host/argon2min?branch=2019-10-13-holo-config#65627302021261496067933fa100487304fc5c61"
@@ -601,8 +595,8 @@ checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 name = "holo-auth-client"
 version = "0.0.1"
 dependencies = [
- "anyhow",
  "ed25519-dalek",
+ "failure",
  "hpos-config-core",
  "lazy_static",
  "reqwest",
