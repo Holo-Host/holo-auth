@@ -1,3 +1,4 @@
+use anyhow::{anyhow, Result};
 use std::time::Duration;
 use std::{env, fs, thread};
 
@@ -7,7 +8,6 @@ use serde::*;
 use uuid::Uuid;
 use zerotier::Identity;
 
-use failure::*;
 use lazy_static::*;
 use reqwest::Client;
 use tracing::*;
@@ -40,34 +40,38 @@ struct Payload {
     zerotier_address: zerotier::Address,
 }
 
-async fn try_auth() -> Fallible<()> {
+async fn try_auth() -> Result<()> {
     let config_path = env::var("HPOS_CONFIG_PATH")?;
     let config_json = fs::read(config_path)?;
     match serde_json::from_slice(&config_json)? {
         Config::V1 { seed, settings, .. } => {
             let holochain_secret_key = SecretKey::from_bytes(&seed)?;
             let holochain_public_key = PublicKey::from(&holochain_secret_key);
-            let zerotier_identity = Identity::read_default()?;
-            let payload = Payload {
-                email: settings.admin.email,
-                holochain_agent_id: holochain_public_key,
-                zerotier_address: zerotier_identity.address,
-            };
-            let resp = CLIENT
-                .post("https://auth-server.holo.host/v1/challenge")
-                .json(&payload)
-                .send()
-                .await?;
-            let promise: PostmarkPromise = resp.json().await?;
-            info!("Postmark message ID: {}", promise.message_id);
+            match Identity::read_default() {
+                Ok(zerotier_identity) => {
+                    let payload = Payload {
+                        email: settings.admin.email,
+                        holochain_agent_id: holochain_public_key,
+                        zerotier_address: zerotier_identity.address,
+                    };
+                    let resp = CLIENT
+                        .post("https://auth-server.holo.host/v1/challenge")
+                        .json(&payload)
+                        .send()
+                        .await?;
+                    let promise: PostmarkPromise = resp.json().await?;
+                    info!("Postmark message ID: {}", promise.message_id);
+                }
+                Err(e) => return Err(anyhow!("{:?}", e)),
+            }
         }
-        other => error!("Invalid Config passed: {:?}", other),
+        other => return Err(anyhow!("Invalid config version: {:?}", other)),
     }
     Ok(())
 }
 
 #[tokio::main]
-async fn main() -> Fallible<()> {
+async fn main() -> Result<()> {
     let subscriber = FmtSubscriber::builder()
         .with_env_filter(EnvFilter::from_default_env())
         .finish();

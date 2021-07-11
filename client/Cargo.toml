@@ -4,8 +4,8 @@ edition = "2018"
 version = "0.0.1"
 
 [dependencies]
+anyhow = "1.0"
 ed25519-dalek = { version = "1.0.1", features = ["serde"] }
-failure = "0.1"
 lazy_static = "1"
 reqwest = { version = "0.10", features = ["json"] }
 serde = { version = "1", features = ["derive"] }
