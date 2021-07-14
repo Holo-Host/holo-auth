@@ -1,8 +1,8 @@
-use std::{env, fs, thread};
 use std::time::Duration;
+use std::{env, fs, thread};
 
 use ed25519_dalek::*;
-use hpos_config_core::{Config, public_key};
+use hpos_config_core::{public_key, Config};
 use serde::*;
 use uuid::Uuid;
 use zerotier::Identity;
@@ -27,7 +27,7 @@ where
 #[derive(Debug, Deserialize)]
 struct PostmarkPromise {
     #[serde(rename = "MessageID")]
-    message_id: Uuid
+    message_id: Uuid,
 }
 
 #[derive(Debug, Serialize)]
@@ -35,34 +35,38 @@ struct Payload {
     email: String,
     #[serde(serialize_with = "serialize_holochain_agent_id")]
     holochain_agent_id: PublicKey,
-    zerotier_address: zerotier::Address
+    zerotier_address: zerotier::Address,
+}
+
+#[derive(Debug, Fail)]
+pub enum AuthError {
+    #[fail(display = "Invalid config version used. please upgrade to hpos-config v2")]
+    ConfigVersionError,
 }
 
 async fn try_auth() -> Fallible<()> {
     let config_path = env::var("HPOS_CONFIG_PATH")?;
     let config_json = fs::read(config_path)?;
-    let Config::V1 { seed, settings, .. } = serde_json::from_slice(&config_json)?;
-
-    let holochain_secret_key = SecretKey::from_bytes(&seed)?;
-    let holochain_public_key = PublicKey::from(&holochain_secret_key);
-
-    let zerotier_identity = Identity::read_default()?;
-
-    let payload = Payload {
-        email: settings.admin.email,
-        holochain_agent_id: holochain_public_key,
-        zerotier_address: zerotier_identity.address,
-    };
-
-    let resp = CLIENT.post("https://auth-server.holo.host/v1/challenge")
-        .json(&payload)
-        .send()
-        .await?;
-
-    let promise: PostmarkPromise = resp.json().await?;
-
-    info!("Postmark message ID: {}", promise.message_id);
-
+    match serde_json::from_slice(&config_json)? {
+        Config::V2 { seed, settings, .. } => {
+            let holochain_secret_key = SecretKey::from_bytes(&seed)?;
+            let holochain_public_key = PublicKey::from(&holochain_secret_key);
+            let zerotier_identity = Identity::read_default()?;
+            let payload = Payload {
+                email: settings.admin.email,
+                holochain_agent_id: holochain_public_key,
+                zerotier_address: zerotier_identity.address,
+            };
+            let resp = CLIENT
+                .post("https://auth-server.holo.host/v1/challenge")
+                .json(&payload)
+                .send()
+                .await?;
+            let promise: PostmarkPromise = resp.json().await?;
+            info!("Postmark message ID: {}", promise.message_id);
+        }
+        Config::V1 { .. } => return Err(AuthError::ConfigVersionError.into()),
+    }
     Ok(())
 }
 
@@ -79,7 +83,7 @@ async fn main() -> Fallible<()> {
     loop {
         match try_auth().await {
             Ok(()) => break,
-            Err(e) => error!("{}", e)
+            Err(e) => error!("{}", e),
         }
 
         thread::sleep(backoff);
