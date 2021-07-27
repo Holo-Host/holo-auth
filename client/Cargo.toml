@@ -1,10 +1,10 @@
 [package]
 name = "holo-auth-client"
 edition = "2018"
-version = "0.0.0"
+version = "0.0.1"
 
 [dependencies]
-ed25519-dalek = { version = "1.0.0-pre.1", features = ["serde"] }
+ed25519-dalek = { version = "1.0.1", features = ["serde"] }
 failure = "0.1"
 lazy_static = "1"
 reqwest = { version = "0.10", features = ["json"] }
@@ -18,8 +18,8 @@ uuid = { version = "0.8", features = ["serde", "v4"] }
 
 [dependencies.hpos-config-core]
 git = "https://github.com/Holo-Host/hpos-config"
-branch = "develop"
+branch = "config-v2-07-07"
 
 [dependencies.zerotier]
-git = "https://github.com/transumption/zerotier-rust"
-branch = "release"
+git = "https://github.com/zo-el/zerotier-rs"
+branch = "develop"
