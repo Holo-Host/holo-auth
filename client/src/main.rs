@@ -47,7 +47,7 @@ pub enum AuthError {
 async fn try_auth() -> Fallible<()> {
     let config_path = env::var("HPOS_CONFIG_PATH")?;
     let config_json = fs::read(config_path)?;
-    let config: Config = serde_json::from_slice(&config_json)?; 
+    let config: Config = serde_json::from_slice(&config_json)?;
     let holochain_public_key = config.holoport_public_key()?;
     match config {
         Config::V2 { settings, .. } => {
