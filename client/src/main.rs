@@ -44,10 +44,15 @@ pub enum AuthError {
     ConfigVersionError,
 }
 
-async fn try_auth() -> Fallible<()> {
+fn get_hpos_config() -> Fallible<Config> {
     let config_path = env::var("HPOS_CONFIG_PATH")?;
     let config_json = fs::read(config_path)?;
     let config: Config = serde_json::from_slice(&config_json)?;
+    Ok(config)
+}
+
+async fn try_zerotier_auth() -> Fallible<()> {
+    let config = get_hpos_config()?;
     let holochain_public_key = config.holoport_public_key()?;
     match config {
         Config::V2 { settings, .. } => {
@@ -70,6 +75,60 @@ async fn try_auth() -> Fallible<()> {
     Ok(())
 }
 
+
+#[derive(Debug, Serialize)]
+struct RegistrationPayload {
+    registration_code: String,
+    #[serde(serialize_with = "serialize_holochain_agent_id")]
+    agent_pub_key: PublicKey,
+    email: String,
+    role: String,
+}
+#[derive(Debug, Serialize, Deserialize)]
+struct RegistrationErrors {
+    error: String,
+    info: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct RegistrationRequest {
+    mem_proof: String,
+}
+async fn try_registration_auth() -> Fallible<()> {
+    let config = get_hpos_config()?;
+    let holochain_public_key = config.holoport_public_key()?;
+    match config {
+        Config::V2 { registration_code, settings, .. } => {
+            let payload = RegistrationPayload {
+                registration_code: registration_code,
+                agent_pub_key: holochain_public_key,
+                email: settings.admin.email,
+                role: "host".to_string(),
+            };
+
+            let resp = CLIENT
+            .post("http://localhost:4000/register-user/")
+            // .post("https://holo-registration-service.holo.host/register-user/")
+            .json(&payload)
+            .send().await?;
+            
+            match resp.error_for_status() {
+                Ok(_) => {
+                    let reg: RegistrationRequest = resp.json().await?;
+                    println!("Postmark message ID: {:?}", reg);
+                },
+                Err(err) => {
+                    let err: RegistrationErrors = err.json().await?;
+                    error!("Registration Error: {:?}", err);
+                }
+            }
+            
+        }
+        Config::V1 { .. } => return Err(AuthError::ConfigVersionError.into()),
+    }
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Fallible<()> {
     let subscriber = FmtSubscriber::builder()
@@ -81,7 +140,17 @@ async fn main() -> Fallible<()> {
     let mut backoff = Duration::from_secs(1);
 
     loop {
-        match try_auth().await {
+        match try_zerotier_auth().await {
+            Ok(()) => break,
+            Err(e) => error!("{}", e),
+        }
+
+        thread::sleep(backoff);
+        backoff += backoff;
+    }
+
+    loop {
+        match try_registration_auth().await {
             Ok(()) => break,
             Err(e) => error!("{}", e),
         }
