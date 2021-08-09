@@ -47,10 +47,10 @@ pub enum AuthError {
 async fn try_auth() -> Fallible<()> {
     let config_path = env::var("HPOS_CONFIG_PATH")?;
     let config_json = fs::read(config_path)?;
-    match serde_json::from_slice(&config_json)? {
-        Config::V2 { seed, settings, .. } => {
-            let holochain_secret_key = SecretKey::from_bytes(&seed)?;
-            let holochain_public_key = PublicKey::from(&holochain_secret_key);
+    let config: Config = serde_json::from_slice(&config_json)?;
+    let holochain_public_key = config.holoport_public_key()?;
+    match config {
+        Config::V2 { settings, .. } => {
             let zerotier_identity = Identity::read_default()?;
             let payload = Payload {
                 email: settings.admin.email,
