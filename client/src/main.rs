@@ -42,6 +42,8 @@ struct Payload {
 pub enum AuthError {
     #[fail(display = "Invalid config version used. please upgrade to hpos-config v2")]
     ConfigVersionError,
+    #[fail(display = "Registration Error: {}", _0)]
+    RegistrationError(String),
 }
 
 fn get_hpos_config() -> Fallible<Config> {
@@ -75,7 +77,6 @@ async fn try_zerotier_auth() -> Fallible<()> {
     Ok(())
 }
 
-
 #[derive(Debug, Serialize)]
 struct RegistrationPayload {
     registration_code: String,
@@ -84,21 +85,21 @@ struct RegistrationPayload {
     email: String,
     role: String,
 }
-#[derive(Debug, Serialize, Deserialize)]
-struct RegistrationErrors {
-    error: String,
-    info: String,
-}
 
 #[derive(Debug, Serialize, Deserialize)]
 struct RegistrationRequest {
     mem_proof: String,
 }
+
 async fn try_registration_auth() -> Fallible<()> {
     let config = get_hpos_config()?;
     let holochain_public_key = config.holoport_public_key()?;
     match config {
-        Config::V2 { registration_code, settings, .. } => {
+        Config::V2 {
+            registration_code,
+            settings,
+            ..
+        } => {
             let payload = RegistrationPayload {
                 registration_code: registration_code,
                 agent_pub_key: holochain_public_key,
@@ -107,22 +108,20 @@ async fn try_registration_auth() -> Fallible<()> {
             };
 
             let resp = CLIENT
-            .post("http://localhost:4000/register-user/")
-            // .post("https://holo-registration-service.holo.host/register-user/")
-            .json(&payload)
-            .send().await?;
-            
+                .post("https://holo-registration-service.holo.host/register-user/")
+                .json(&payload)
+                .send()
+                .await?;
             match resp.error_for_status() {
-                Ok(_) => {
-                    let reg: RegistrationRequest = resp.json().await?;
-                    println!("Postmark message ID: {:?}", reg);
-                },
+                Ok(r) => {
+                    let reg: RegistrationRequest = r.json().await?;
+                    println!("Registration completed message ID: {:?}", reg);
+                }
                 Err(err) => {
-                    let err: RegistrationErrors = err.json().await?;
                     error!("Registration Error: {:?}", err);
+                    return Err(AuthError::RegistrationError(err.to_string()).into());
                 }
             }
-            
         }
         Config::V1 { .. } => return Err(AuthError::ConfigVersionError.into()),
     }
@@ -148,6 +147,8 @@ async fn main() -> Fallible<()> {
         thread::sleep(backoff);
         backoff += backoff;
     }
+
+    backoff = Duration::from_secs(60);
 
     loop {
         match try_registration_auth().await {
