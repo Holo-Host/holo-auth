@@ -1,12 +1,11 @@
 /* global SETTINGS, WHITELIST, fetch */
 
-import * as hmac from '../hmac'
 const isInternal = email => email.endsWith('@holo.host')
 
 const handle = async req => {
   const serverToken = await SETTINGS.get('postmark_server_token')
-  const payload = await req.json()
-  let { email, alias } = payload
+  const val = await req.json()
+  let { email, alias } = val
   // TEMP setting alias
   alias = 'not-whitelisted'
   
