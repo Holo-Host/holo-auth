@@ -91,22 +91,22 @@ struct RegistrationRequest {
     mem_proof: String,
 }
 
-// #[derive(Debug, Serialize)]
-// struct NotifyPayload {
-//     email: String,
-//     alias: String,
-// }
-// async fn sendFailureEmail(email: String, alias: String) -> Fallible<()> {
-//     let payload = NotifyPayload { email, alias };
-//     let resp = CLIENT
-//         .post("https://auth-server.holo.host/v1/notify")
-//         .json(&payload)
-//         .send()
-//         .await?;
-//     let promise: PostmarkPromise = resp.json().await?;
-//     info!("Postmark message ID: {}", promise.message_id);
-//     Ok(())
-// }
+#[derive(Debug, Serialize)]
+struct NotifyPayload {
+    email: String,
+    alias: String,
+}
+async fn send_failure_email(email: String, alias: String) -> Fallible<()> {
+    let payload = NotifyPayload { email, alias };
+    let resp = CLIENT
+        .post("https://auth-server.holo.host/v1/notify")
+        .json(&payload)
+        .send()
+        .await?;
+    let promise: PostmarkPromise = resp.json().await?;
+    info!("Postmark message ID: {}", promise.message_id);
+    Ok(())
+}
 
 async fn try_registration_auth() -> Fallible<()> {
     let config = get_hpos_config()?;
@@ -126,7 +126,7 @@ async fn try_registration_auth() -> Fallible<()> {
             };
 
             let resp = CLIENT
-                .post("https://holo-registration-service.holo.host/register-user/")
+                .post("http://holo-registration-service.holo.host/register-user/")
                 .json(&payload)
                 .send()
                 .await?;
@@ -137,7 +137,7 @@ async fn try_registration_auth() -> Fallible<()> {
                 }
                 Err(err) => {
                     error!("Registration Error: {:?}", err);
-                    // sendFailureEmail(email, "tmp".to_string()).await?;
+                    send_failure_email(email, err.to_string()).await?;
                     return Err(AuthError::RegistrationError(err.to_string()).into());
                 }
             }
@@ -154,23 +154,23 @@ async fn main() -> Fallible<()> {
         .finish();
 
     tracing::subscriber::set_global_default(subscriber)?;
-
-    let mut backoff = Duration::from_secs(300); // 5 mins
-    loop {
-        match try_registration_auth().await {
-            Ok(()) => break,
-            Err(e) => error!("{}", e),
-        }
-        thread::sleep(backoff);
-        backoff += backoff;
-    }
-    backoff = Duration::from_secs(1);
+    // TODO: REVERT TO trying zerotier after registration
+    let mut backoff = Duration::from_secs(1); // 5 mins
     loop {
         match try_zerotier_auth().await {
             Ok(()) => break,
             Err(e) => error!("{}", e),
         }
 
+        thread::sleep(backoff);
+        backoff += backoff;
+    }
+    backoff = Duration::from_secs(300);
+    loop {
+        match try_registration_auth().await {
+            Ok(()) => break,
+            Err(e) => error!("{}", e),
+        }
         thread::sleep(backoff);
         backoff += backoff;
     }
