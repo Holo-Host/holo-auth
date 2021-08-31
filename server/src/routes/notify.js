@@ -6,7 +6,8 @@ const handle = async req => {
   const serverToken = await SETTINGS.get('postmark_server_token')
   const val = await req.json()
   let { email, alias } = val
-  // TEMP setting alias
+  
+  // TODO: TEMP setting alias
   alias = 'not-whitelisted'
   
   const group = isInternal(email) ? 'Internal' : 'External'
@@ -16,7 +17,7 @@ const handle = async req => {
     Tag: `${group} ${alias}`,
     To: email,
     TemplateAlias: alias,
-    TemplateModel: model
+    TemplateModel: {}
   }
 
   return fetch('https://api.postmarkapp.com/email/withTemplate', {
