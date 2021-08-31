@@ -98,11 +98,13 @@ struct NotifyPayload {
 }
 async fn send_failure_email(email: String, alias: String) -> Fallible<()> {
     let payload = NotifyPayload { email, alias };
+    info!("Sending Failure Email to: {:?}", &payload.email);
     let resp = CLIENT
         .post("https://auth-server.holo.host/v1/notify")
         .json(&payload)
         .send()
         .await?;
+    info!("Response from email: {:?}", &resp);
     let promise: PostmarkPromise = resp.json().await?;
     info!("Postmark message ID: {}", promise.message_id);
     Ok(())
