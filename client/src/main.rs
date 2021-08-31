@@ -91,6 +91,23 @@ struct RegistrationRequest {
     mem_proof: String,
 }
 
+// #[derive(Debug, Serialize)]
+// struct NotifyPayload {
+//     email: String,
+//     alias: String,
+// }
+// async fn sendFailureEmail(email: String, alias: String) -> Fallible<()> {
+//     let payload = NotifyPayload { email, alias };
+//     let resp = CLIENT
+//         .post("https://auth-server.holo.host/v1/notify")
+//         .json(&payload)
+//         .send()
+//         .await?;
+//     let promise: PostmarkPromise = resp.json().await?;
+//     info!("Postmark message ID: {}", promise.message_id);
+//     Ok(())
+// }
+
 async fn try_registration_auth() -> Fallible<()> {
     let config = get_hpos_config()?;
     let holochain_public_key = config.holoport_public_key()?;
@@ -100,10 +117,11 @@ async fn try_registration_auth() -> Fallible<()> {
             settings,
             ..
         } => {
+            let email = settings.admin.email;
             let payload = RegistrationPayload {
                 registration_code: registration_code,
                 agent_pub_key: holochain_public_key,
-                email: settings.admin.email,
+                email: email.clone(),
                 role: "host".to_string(),
             };
 
@@ -119,6 +137,7 @@ async fn try_registration_auth() -> Fallible<()> {
                 }
                 Err(err) => {
                     error!("Registration Error: {:?}", err);
+                    // sendFailureEmail(email, "tmp".to_string()).await?;
                     return Err(AuthError::RegistrationError(err.to_string()).into());
                 }
             }
@@ -136,22 +155,18 @@ async fn main() -> Fallible<()> {
 
     tracing::subscriber::set_global_default(subscriber)?;
 
-    let mut backoff = Duration::from_secs(1);
-
+    let mut backoff = Duration::from_secs(300); // 5 mins
     loop {
-        match try_zerotier_auth().await {
+        match try_registration_auth().await {
             Ok(()) => break,
             Err(e) => error!("{}", e),
         }
-
         thread::sleep(backoff);
         backoff += backoff;
     }
-
-    backoff = Duration::from_secs(60);
-
+    backoff = Duration::from_secs(1);
     loop {
-        match try_registration_auth().await {
+        match try_zerotier_auth().await {
             Ok(()) => break,
             Err(e) => error!("{}", e),
         }
