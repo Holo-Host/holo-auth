@@ -94,10 +94,10 @@ struct RegistrationRequest {
 #[derive(Debug, Serialize)]
 struct NotifyPayload {
     email: String,
-    alias: String,
+    error: String,
 }
-async fn send_failure_email(email: String, alias: String) -> Fallible<()> {
-    let payload = NotifyPayload { email, alias };
+async fn send_failure_email(email: String, error: String) -> Fallible<()> {
+    let payload = NotifyPayload { email, error };
     info!("Sending Failure Email to: {:?}", &payload.email);
     let resp = CLIENT
         .post("https://auth-server.holo.host/v1/notify")

@@ -5,10 +5,10 @@ const isInternal = email => email.endsWith('@holo.host')
 const handle = async req => {
   const serverToken = await SETTINGS.get('postmark_server_token')
   const val = await req.json()
-  let { email, alias } = val
+  let { email, error } = val
   
   // TODO: TEMP setting alias
-  alias = 'not-whitelisted'
+  const alias = 'failed-registration'
   
   const group = isInternal(email) ? 'Internal' : 'External'
 
@@ -17,7 +17,9 @@ const handle = async req => {
     Tag: `${group} ${alias}`,
     To: email,
     TemplateAlias: alias,
-    TemplateModel: {}
+    TemplateModel: {
+        error
+    }
   }
 
   return fetch('https://api.postmarkapp.com/email/withTemplate', {
