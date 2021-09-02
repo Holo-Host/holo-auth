@@ -1,5 +1,5 @@
 use std::time::Duration;
-use std::{env, fs, thread};
+use std::{env, fmt, fs, thread};
 
 use ed25519_dalek::*;
 use hpos_config_core::{public_key, Config};
@@ -78,20 +78,6 @@ async fn try_zerotier_auth() -> Fallible<()> {
 }
 
 #[derive(Debug, Serialize)]
-struct RegistrationPayload {
-    registration_code: String,
-    #[serde(serialize_with = "serialize_holochain_agent_id")]
-    agent_pub_key: PublicKey,
-    email: String,
-    role: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct RegistrationRequest {
-    mem_proof: String,
-}
-
-#[derive(Debug, Serialize)]
 struct NotifyPayload {
     email: String,
     error: String,
@@ -108,6 +94,32 @@ async fn send_failure_email(email: String, error: String) -> Fallible<()> {
     let promise: PostmarkPromise = resp.json().await?;
     info!("Postmark message ID: {}", promise.message_id);
     Ok(())
+}
+
+#[derive(Debug, Serialize)]
+struct RegistrationPayload {
+    registration_code: String,
+    #[serde(serialize_with = "serialize_holochain_agent_id")]
+    agent_pub_key: PublicKey,
+    email: String,
+    role: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct RegistrationRequest {
+    mem_proof: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct RegistrationError {
+    error: String,
+    info: String,
+}
+
+impl fmt::Display for RegistrationError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Error: {}, More Info: {}", self.error, self.info)
+    }
 }
 
 async fn try_registration_auth() -> Fallible<()> {
@@ -132,13 +144,14 @@ async fn try_registration_auth() -> Fallible<()> {
                 .json(&payload)
                 .send()
                 .await?;
-            match resp.error_for_status() {
-                Ok(r) => {
-                    let reg: RegistrationRequest = r.json().await?;
+            match resp.error_for_status_ref() {
+                Ok(_) => {
+                    let reg: RegistrationRequest = resp.json().await?;
                     println!("Registration completed message ID: {:?}", reg);
+                    //TODO: save mem-proofs into a file on the hpos
                 }
-                Err(err) => {
-                    error!("Registration Error: {:?}", err);
+                Err(_) => {
+                    let err: RegistrationError = resp.json().await?;
                     send_failure_email(email, err.to_string()).await?;
                     return Err(AuthError::RegistrationError(err.to_string()).into());
                 }
