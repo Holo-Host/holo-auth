@@ -1,5 +1,5 @@
 use std::time::Duration;
-use std::{env, fmt, fs, thread};
+use std::{env, fmt, fs, fs::File, io::Write, thread};
 
 use ed25519_dalek::*;
 use hpos_config_core::{public_key, Config};
@@ -148,7 +148,9 @@ async fn try_registration_auth() -> Fallible<()> {
                 Ok(_) => {
                     let reg: RegistrationRequest = resp.json().await?;
                     println!("Registration completed message ID: {:?}", reg);
-                    //TODO: save mem-proofs into a file on the hpos
+                    // save mem-proofs into a file on the hpos
+                    let mut file = File::create("/var/lib/configure-holochain/mem-proof")?;
+                    file.write_all(reg.mem_proof.as_bytes())?;
                 }
                 Err(_) => {
                     let err: RegistrationError = resp.json().await?;
