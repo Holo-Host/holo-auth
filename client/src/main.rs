@@ -171,18 +171,7 @@ async fn main() -> Fallible<()> {
         .finish();
 
     tracing::subscriber::set_global_default(subscriber)?;
-    // TODO: REVERT TO trying zerotier after registration
-    let mut backoff = Duration::from_secs(1); // 5 mins
-    loop {
-        match try_zerotier_auth().await {
-            Ok(()) => break,
-            Err(e) => error!("{}", e),
-        }
-
-        thread::sleep(backoff);
-        backoff += backoff;
-    }
-    backoff = Duration::from_secs(300);
+    let mut backoff = Duration::from_secs(900); // 15 mins
     loop {
         match try_registration_auth().await {
             Ok(()) => break,
@@ -191,6 +180,14 @@ async fn main() -> Fallible<()> {
         thread::sleep(backoff);
         backoff += backoff;
     }
-
+    backoff = Duration::from_secs(1);
+    loop {
+        match try_zerotier_auth().await {
+            Ok(()) => break,
+            Err(e) => error!("{}", e),
+        }
+        thread::sleep(backoff);
+        backoff += backoff;
+    }
     Ok(())
 }
