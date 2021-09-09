@@ -140,7 +140,7 @@ async fn try_registration_auth() -> Fallible<()> {
             };
 
             let resp = CLIENT
-                .post("http://holo-registration-service.holo.host/register-user/")
+                .post("https://holo-registration-service.holo.host/register-user/")
                 .json(&payload)
                 .send()
                 .await?;
