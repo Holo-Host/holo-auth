@@ -101,11 +101,11 @@ struct Registration {
     registration_code: String,
     #[serde(serialize_with = "serialize_holochain_agent_id")]
     agent_pub_key: PublicKey,
+    email: String,
     payload: RegistrationPayload,
 }
 #[derive(Debug, Serialize)]
 struct RegistrationPayload {
-    email: String,
     role: String,
 }
 #[derive(Debug, Serialize, Deserialize)]
@@ -138,8 +138,8 @@ async fn try_registration_auth() -> Fallible<()> {
             let payload = Registration {
                 registration_code: registration_code,
                 agent_pub_key: holochain_public_key,
+                email: email.clone(),
                 payload: RegistrationPayload {
-                    email: email.clone(),
                     role: "host".to_string(),
                 },
             };
