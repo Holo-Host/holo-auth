@@ -24,6 +24,16 @@ where
     serializer.serialize_str(&public_key::to_base36_id(&public_key))
 }
 
+fn serialize_holochain_agent_pub_key<S>(
+    public_key: &PublicKey,
+    serializer: S,
+) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    serializer.serialize_str(&public_key::to_holochain_encoded_agent_key(&public_key))
+}
+
 #[derive(Debug, Deserialize)]
 struct PostmarkPromise {
     #[serde(rename = "MessageID")]
@@ -99,7 +109,7 @@ async fn send_failure_email(email: String, error: String) -> Fallible<()> {
 #[derive(Debug, Serialize)]
 struct Registration {
     registration_code: String,
-    #[serde(serialize_with = "serialize_holochain_agent_id")]
+    #[serde(serialize_with = "serialize_holochain_agent_pub_key")]
     agent_pub_key: PublicKey,
     email: String,
     payload: RegistrationPayload,
