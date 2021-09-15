@@ -97,14 +97,17 @@ async fn send_failure_email(email: String, error: String) -> Fallible<()> {
 }
 
 #[derive(Debug, Serialize)]
-struct RegistrationPayload {
+struct Registration {
     registration_code: String,
     #[serde(serialize_with = "serialize_holochain_agent_id")]
     agent_pub_key: PublicKey,
     email: String,
+    payload: RegistrationPayload,
+}
+#[derive(Debug, Serialize)]
+struct RegistrationPayload {
     role: String,
 }
-
 #[derive(Debug, Serialize, Deserialize)]
 struct RegistrationRequest {
     mem_proof: String,
@@ -132,11 +135,13 @@ async fn try_registration_auth() -> Fallible<()> {
             ..
         } => {
             let email = settings.admin.email;
-            let payload = RegistrationPayload {
+            let payload = Registration {
                 registration_code: registration_code,
                 agent_pub_key: holochain_public_key,
                 email: email.clone(),
-                role: "host".to_string(),
+                payload: RegistrationPayload {
+                    role: "host".to_string(),
+                },
             };
 
             let resp = CLIENT
