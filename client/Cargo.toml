@@ -18,7 +18,7 @@ uuid = { version = "0.8", features = ["serde", "v4"] }
 
 [dependencies.hpos-config-core]
 git = "https://github.com/Holo-Host/hpos-config"
-branch = "encode-key-09-16"
+branch = "develop"
 
 [dependencies.zerotier]
 git = "https://github.com/zo-el/zerotier-rs"
