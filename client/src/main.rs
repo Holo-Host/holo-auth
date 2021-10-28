@@ -123,9 +123,11 @@ struct RegistrationRequest {
     mem_proof: String,
 }
 
+#[allow(non_snake_case)]
 #[derive(Debug, Serialize, Deserialize)]
 struct RegistrationError {
     error: String,
+    isDisplayedToUser: bool,
     info: String,
 }
 
