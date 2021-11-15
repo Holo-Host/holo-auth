@@ -1,17 +1,17 @@
+use ed25519_dalek::*;
+use failure::*;
+use hpos_config_core::{public_key, Config};
+use lazy_static::*;
+use reqwest::Client;
+use serde::*;
 use std::time::Duration;
 use std::{env, fmt, fs, fs::File, io::Write, thread};
-
-use ed25519_dalek::*;
-use hpos_config_core::{public_key, Config};
-use serde::*;
+use tracing::*;
+use tracing_subscriber::{EnvFilter, FmtSubscriber};
 use uuid::Uuid;
 use zerotier::Identity;
 
-use failure::*;
-use lazy_static::*;
-use reqwest::Client;
-use tracing::*;
-use tracing_subscriber::{EnvFilter, FmtSubscriber};
+const DEVICE_BUNDLE_DEFAULT_PASSWORD: &str = "pass";
 
 lazy_static! {
     static ref CLIENT: Client = Client::new();
@@ -63,14 +63,12 @@ fn get_hpos_config() -> Fallible<Config> {
     Ok(config)
 }
 
-async fn try_zerotier_auth() -> Fallible<()> {
-    let config = get_hpos_config()?;
-    let holochain_public_key = config.holoport_public_key()?;
+async fn try_zerotier_auth(config: &Config, holochain_public_key: PublicKey) -> Fallible<()> {
     match config {
         Config::V2 { settings, .. } => {
             let zerotier_identity = Identity::read_default()?;
             let payload = Payload {
-                email: settings.admin.email,
+                email: settings.admin.email.clone(),
                 holochain_agent_id: holochain_public_key,
                 zerotier_address: zerotier_identity.address,
             };
@@ -137,18 +135,16 @@ impl fmt::Display for RegistrationError {
     }
 }
 
-async fn try_registration_auth() -> Fallible<()> {
-    let config = get_hpos_config()?;
-    let holochain_public_key = config.holoport_public_key()?;
+async fn try_registration_auth(config: &Config, holochain_public_key: PublicKey) -> Fallible<()> {
     match config {
         Config::V2 {
             registration_code,
             settings,
             ..
         } => {
-            let email = settings.admin.email;
+            let email = settings.admin.email.clone();
             let payload = Registration {
-                registration_code: registration_code,
+                registration_code: registration_code.clone(),
                 agent_pub_key: holochain_public_key,
                 email: email.clone(),
                 payload: RegistrationPayload {
@@ -189,8 +185,14 @@ async fn main() -> Fallible<()> {
 
     tracing::subscriber::set_global_default(subscriber)?;
     let mut backoff = Duration::from_secs(900); // 15 mins
+    let config = get_hpos_config()?;
+    let holochain_public_key = hpos_config_seed_bundle_explorer::holoport_public_key(
+        &config,
+        Some(DEVICE_BUNDLE_DEFAULT_PASSWORD.to_string()),
+    )
+    .await?;
     loop {
-        match try_registration_auth().await {
+        match try_registration_auth(&config, holochain_public_key).await {
             Ok(()) => break,
             Err(e) => error!("{}", e),
         }
@@ -199,7 +201,7 @@ async fn main() -> Fallible<()> {
     }
     backoff = Duration::from_secs(1);
     loop {
-        match try_zerotier_auth().await {
+        match try_zerotier_auth(&config, holochain_public_key).await {
             Ok(()) => break,
             Err(e) => error!("{}", e),
         }
