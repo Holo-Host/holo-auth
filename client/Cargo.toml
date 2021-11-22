@@ -18,13 +18,11 @@ uuid = { version = "0.8", features = ["serde", "v4"] }
 
 [dependencies.hpos-config-core]
 git = "https://github.com/Holo-Host/hpos-config"
-rev = "2b21c230cec62d01d04212cde0c8af38cef35217"
-# branch = "develop"
+rev = "b86acb4120445dcdd155b87d94c7bc27fc8096b0"
 
 [dependencies.hpos-config-seed-bundle-explorer]
 git = "https://github.com/Holo-Host/hpos-config"
-rev = "2b21c230cec62d01d04212cde0c8af38cef35217"
-# branch = "develop"
+rev = "b86acb4120445dcdd155b87d94c7bc27fc8096b0"
 
 [dependencies.zerotier]
 git = "https://github.com/zo-el/zerotier-rs"
