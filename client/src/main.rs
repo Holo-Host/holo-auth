@@ -9,7 +9,7 @@ use std::{env, fmt, fs, fs::File, io::Write, thread};
 use tracing::*;
 use tracing_subscriber::{EnvFilter, FmtSubscriber};
 use uuid::Uuid;
-use zerotier::Identity;
+use zerotier_api::Identity;
 
 const DEVICE_BUNDLE_DEFAULT_PASSWORD: &str = "pass";
 
@@ -45,7 +45,7 @@ struct Payload {
     email: String,
     #[serde(serialize_with = "serialize_holochain_agent_id")]
     holochain_agent_id: PublicKey,
-    zerotier_address: zerotier::Address,
+    zerotier_address: zerotier_api::Address,
 }
 
 #[derive(Debug, Fail)]

@@ -612,7 +612,7 @@ dependencies = [
  "tracing-futures",
  "tracing-subscriber",
  "uuid",
- "zerotier",
+ "zerotier-api",
 ]
 
 [[package]]
@@ -2125,9 +2125,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "zerotier"
-version = "0.2.0"
-source = "git+https://github.com/zo-el/zerotier-rs?branch=develop#505e87220338bdda2b1ce97e770fec105f1ef8c4"
+name = "zerotier-api"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2676b090e59177f4876737b6cd4234ce445fdad50d5344feef277f570638e11e"
 dependencies = [
  "arrayref",
  "byteorder",
