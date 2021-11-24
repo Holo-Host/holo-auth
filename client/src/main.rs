@@ -11,8 +11,6 @@ use tracing_subscriber::{EnvFilter, FmtSubscriber};
 use uuid::Uuid;
 use zerotier_api::Identity;
 
-const DEVICE_BUNDLE_DEFAULT_PASSWORD: &str = "pass";
-
 lazy_static! {
     static ref CLIENT: Client = Client::new();
 }
@@ -50,7 +48,7 @@ struct Payload {
 
 #[derive(Debug, Fail)]
 pub enum AuthError {
-    #[fail(display = "Invalid config version used. please upgrade to hpos-config v2")]
+    #[fail(display = "Error: Invalid config version used. please upgrade to hpos-config v2")]
     ConfigVersionError,
     #[fail(display = "Registration Error: {}", _0)]
     RegistrationError(String),
@@ -172,7 +170,14 @@ async fn try_registration_auth(config: &Config, holochain_public_key: PublicKey)
                 }
             }
         }
-        Config::V1 { .. } => return Err(AuthError::ConfigVersionError.into()),
+        Config::V1 { settings, .. } => {
+            send_failure_email(
+                settings.admin.email.clone(),
+                AuthError::ConfigVersionError.to_string(),
+            )
+            .await?;
+            return Err(AuthError::ConfigVersionError.into());
+        }
     }
     Ok(())
 }
@@ -186,11 +191,12 @@ async fn main() -> Fallible<()> {
     tracing::subscriber::set_global_default(subscriber)?;
     let mut backoff = Duration::from_secs(900); // 15 mins
     let config = get_hpos_config()?;
-    let holochain_public_key = hpos_config_seed_bundle_explorer::holoport_public_key(
-        &config,
-        Some(DEVICE_BUNDLE_DEFAULT_PASSWORD.to_string()),
-    )
-    .await?;
+    let password = match env::var("DEVICE_BUNDLE_PASSWORD") {
+        Ok(pass) => Some(pass),
+        _ => None,
+    };
+    let holochain_public_key =
+        hpos_config_seed_bundle_explorer::holoport_public_key(&config, password).await?;
     loop {
         match try_registration_auth(&config, holochain_public_key).await {
             Ok(()) => break,
