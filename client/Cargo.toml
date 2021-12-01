@@ -19,8 +19,8 @@ zerotier-api = "0.1.0"
 
 [dependencies.hpos-config-core]
 git = "https://github.com/Holo-Host/hpos-config"
-rev = "b86acb4120445dcdd155b87d94c7bc27fc8096b0"
+rev = "045a9d145e2b67bf783e32380a23672f010eb905"
 
 [dependencies.hpos-config-seed-bundle-explorer]
 git = "https://github.com/Holo-Host/hpos-config"
-rev = "b86acb4120445dcdd155b87d94c7bc27fc8096b0"
+rev = "045a9d145e2b67bf783e32380a23672f010eb905"
