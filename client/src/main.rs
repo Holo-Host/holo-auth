@@ -189,7 +189,6 @@ async fn main() -> Fallible<()> {
         .finish();
 
     tracing::subscriber::set_global_default(subscriber)?;
-    let mut backoff = Duration::from_secs(900); // 15 mins
     let config = get_hpos_config()?;
     let password = match env::var("DEVICE_BUNDLE_PASSWORD") {
         Ok(pass) => Some(pass),
@@ -197,15 +196,11 @@ async fn main() -> Fallible<()> {
     };
     let holochain_public_key =
         hpos_config_seed_bundle_explorer::holoport_public_key(&config, password).await?;
-    loop {
-        match try_registration_auth(&config, holochain_public_key).await {
-            Ok(()) => break,
-            Err(e) => error!("{}", e),
-        }
-        thread::sleep(backoff);
-        backoff += backoff;
+    if let Err(e) = try_registration_auth(&config, holochain_public_key).await {
+        error!("{}", e);
+        return Err(e);
     }
-    backoff = Duration::from_secs(1);
+    let mut backoff = Duration::from_secs(1);
     loop {
         match try_zerotier_auth(&config, holochain_public_key).await {
             Ok(()) => break,
