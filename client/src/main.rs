@@ -4,6 +4,7 @@ use hpos_config_core::{public_key, Config};
 use lazy_static::*;
 use reqwest::Client;
 use serde::*;
+use std::path::Path;
 use std::time::Duration;
 use std::{env, fmt, fs, fs::File, io::Write, thread};
 use tracing::*;
@@ -133,6 +134,13 @@ impl fmt::Display for RegistrationError {
     }
 }
 
+fn mem_proof_path() -> String {
+    match env::var("MEM_PROOF_PATH") {
+        Ok(path) => path,
+        _ => "/var/lib/configure-holochain/mem-proof".to_string(),
+    }
+}
+
 async fn try_registration_auth(config: &Config, holochain_public_key: PublicKey) -> Fallible<()> {
     match config {
         Config::V2 {
@@ -160,7 +168,7 @@ async fn try_registration_auth(config: &Config, holochain_public_key: PublicKey)
                     let reg: RegistrationRequest = resp.json().await?;
                     println!("Registration completed message ID: {:?}", reg);
                     // save mem-proofs into a file on the hpos
-                    let mut file = File::create("/var/lib/configure-holochain/mem-proof")?;
+                    let mut file = File::create(mem_proof_path())?;
                     file.write_all(reg.mem_proof.as_bytes())?;
                 }
                 Err(_) => {
@@ -196,10 +204,14 @@ async fn main() -> Fallible<()> {
     };
     let holochain_public_key =
         hpos_config_seed_bundle_explorer::holoport_public_key(&config, password).await?;
-    if let Err(e) = try_registration_auth(&config, holochain_public_key).await {
-        error!("{}", e);
-        return Err(e);
+    // Get mem-proof by registering on the ops-console
+    if !Path::new(&mem_proof_path()).exists() {
+        if let Err(e) = try_registration_auth(&config, holochain_public_key).await {
+            error!("{}", e);
+            return Err(e);
+        }
     }
+    // Register on zerotier
     let mut backoff = Duration::from_secs(1);
     loop {
         match try_zerotier_auth(&config, holochain_public_key).await {
