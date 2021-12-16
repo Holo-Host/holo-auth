@@ -159,7 +159,7 @@ async fn try_registration_auth(config: &Config, holochain_public_key: PublicKey)
             };
 
             let resp = CLIENT
-                .post("https://holo-registration-service.holo.host/register-user/")
+                .post("https://test-membrane-proof-service.holo.host/register-user/")
                 .json(&payload)
                 .send()
                 .await?;
