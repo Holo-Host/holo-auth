@@ -16,10 +16,10 @@ use zerotier_api::Identity;
 fn get_holoport_url(id: PublicKey) -> String {
     if let Ok(network) = env::var("HOLO_NETWORK") {
         if network == "devNet" {
-            return format!("https://{:?}.holohost.dev", public_key::to_base36_id(&id));
+            return format!("https://{}.holohost.dev", public_key::to_base36_id(&id));
         }
     }
-    format!("https://{:?}.holohost.net", public_key::to_base36_id(&id))
+    format!("https://{}.holohost.net", public_key::to_base36_id(&id))
 }
 
 fn mem_proof_path() -> String {
