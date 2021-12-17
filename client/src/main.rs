@@ -4,6 +4,7 @@ use hpos_config_core::{public_key, Config};
 use lazy_static::*;
 use reqwest::Client;
 use serde::*;
+use std::convert::TryInto;
 use std::path::Path;
 use std::time::Duration;
 use std::{env, fmt, fs, fs::File, io::Write, thread};
@@ -11,6 +12,22 @@ use tracing::*;
 use tracing_subscriber::{EnvFilter, FmtSubscriber};
 use uuid::Uuid;
 use zerotier_api::Identity;
+
+fn get_holoport_url(id: PublicKey) -> String {
+    if let Ok(network) = env::var("HOLO_NETWORK") {
+        if network == "devNet" {
+            return format!("{:?}.holohost.dev", id);
+        }
+    }
+    format!("{:?}.holohost.net", id)
+}
+
+fn mem_proof_path() -> String {
+    match env::var("MEM_PROOF_PATH") {
+        Ok(path) => path,
+        _ => "/var/lib/configure-holochain/mem-proof".to_string(),
+    }
+}
 
 lazy_static! {
     static ref CLIENT: Client = Client::new();
@@ -39,14 +56,6 @@ struct PostmarkPromise {
     message_id: Uuid,
 }
 
-#[derive(Debug, Serialize)]
-struct Payload {
-    email: String,
-    #[serde(serialize_with = "serialize_holochain_agent_id")]
-    holochain_agent_id: PublicKey,
-    zerotier_address: zerotier_api::Address,
-}
-
 #[derive(Debug, Fail)]
 pub enum AuthError {
     #[fail(display = "Error: Invalid config version used. please upgrade to hpos-config v2")]
@@ -62,21 +71,45 @@ fn get_hpos_config() -> Fallible<Config> {
     Ok(config)
 }
 
+#[derive(Debug, Serialize)]
+struct ZTData {
+    email: String,
+    #[serde(serialize_with = "serialize_holochain_agent_id")]
+    holochain_agent_id: PublicKey,
+    zerotier_address: zerotier_api::Address,
+}
+#[derive(Debug, Serialize)]
+struct ZTPayload {
+    data: ZTData,
+    signature: String,
+}
+
 async fn try_zerotier_auth(config: &Config, holochain_public_key: PublicKey) -> Fallible<()> {
     match config {
         Config::V2 { settings, .. } => {
             let zerotier_identity = Identity::read_default()?;
-            let payload = Payload {
+            let data = ZTData {
                 email: settings.admin.email.clone(),
-                holochain_agent_id: holochain_public_key,
-                zerotier_address: zerotier_identity.address,
+                holochain_agent_id: holochain_public_key.clone(),
+                zerotier_address: zerotier_identity.address.clone(),
             };
+            let zerotier_keypair: Keypair = zerotier_identity.try_into()?;
+            let data_bytes = serde_json::to_vec(&data)?;
+            let zerotier_signature = zerotier_keypair.sign(&data_bytes[..]);
             let resp = CLIENT
-                .post("https://auth-server.holo.host/v1/challenge")
-                .json(&payload)
+                .post("https://auth-server.holo.host/v1/zt_registration")
+                .json(&ZTPayload {
+                    data,
+                    signature: base64::encode(&zerotier_signature.to_bytes()[..]),
+                })
                 .send()
                 .await?;
             let promise: PostmarkPromise = resp.json().await?;
+            send_success_email(
+                settings.admin.email.clone(),
+                get_holoport_url(holochain_public_key),
+            )
+            .await?;
             info!("Postmark message ID: {}", promise.message_id);
         }
         Config::V1 { .. } => return Err(AuthError::ConfigVersionError.into()),
@@ -87,10 +120,21 @@ async fn try_zerotier_auth(config: &Config, holochain_public_key: PublicKey) -> 
 #[derive(Debug, Serialize)]
 struct NotifyPayload {
     email: String,
-    error: String,
+    success: bool,
+    data: String,
 }
-async fn send_failure_email(email: String, error: String) -> Fallible<()> {
-    let payload = NotifyPayload { email, error };
+async fn send_failure_email(email: String, data: String) -> Fallible<()> {
+    send_email(email, data, false).await
+}
+async fn send_success_email(email: String, data: String) -> Fallible<()> {
+    send_email(email, data, true).await
+}
+async fn send_email(email: String, data: String, success: bool) -> Fallible<()> {
+    let payload = NotifyPayload {
+        email,
+        success,
+        data,
+    };
     info!("Sending Failure Email to: {:?}", &payload.email);
     let resp = CLIENT
         .post("https://auth-server.holo.host/v1/notify")
@@ -131,13 +175,6 @@ struct RegistrationError {
 impl fmt::Display for RegistrationError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Error: {}, More Info: {}", self.error, self.info)
-    }
-}
-
-fn mem_proof_path() -> String {
-    match env::var("MEM_PROOF_PATH") {
-        Ok(path) => path,
-        _ => "/var/lib/configure-holochain/mem-proof".to_string(),
     }
 }
 

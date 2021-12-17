@@ -5,11 +5,19 @@ const isInternal = email => email.endsWith('@holo.host')
 const handle = async req => {
   const serverToken = await SETTINGS.get('postmark_server_token')
   const val = await req.json()
-  let { email, error } = val
-  
-  // TODO: TEMP setting alias
-  const alias = 'failed-registration'
-  
+  let { email, success, data } = val
+
+  let alias = 'failed-registration'
+  let templateModel = {
+    error: data
+  };
+  if (success) {
+    const alias = 'successful-registration'
+    templateModel = {
+      holoport_url: data
+    }
+  }
+
   const group = isInternal(email) ? 'Internal' : 'External'
 
   const payload = {
@@ -17,16 +25,14 @@ const handle = async req => {
     Tag: `${group} ${alias}`,
     To: email,
     TemplateAlias: alias,
-    TemplateModel: {
-        error
-    }
+    TemplateModel: templateModel
   }
 
   return fetch('https://api.postmarkapp.com/email/withTemplate', {
     method: 'POST',
     headers: {
-     accept: 'application/json',
-     'x-postmark-server-token': serverToken
+      accept: 'application/json',
+      'x-postmark-server-token': serverToken
     },
     body: JSON.stringify(payload)
   })
