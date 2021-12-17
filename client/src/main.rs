@@ -104,13 +104,13 @@ async fn try_zerotier_auth(config: &Config, holochain_public_key: PublicKey) -> 
                 })
                 .send()
                 .await?;
-            let promise: PostmarkPromise = resp.json().await?;
+            let response = resp.json().await?;
+            info!("auth-server response: {:?}", response);
             send_success_email(
                 settings.admin.email.clone(),
                 get_holoport_url(holochain_public_key),
             )
             .await?;
-            info!("Postmark message ID: {}", promise.message_id);
         }
         Config::V1 { .. } => return Err(AuthError::ConfigVersionError.into()),
     }
@@ -124,9 +124,11 @@ struct NotifyPayload {
     data: String,
 }
 async fn send_failure_email(email: String, data: String) -> Fallible<()> {
+    info!("Sending Failure Email to: {:?}", email);
     send_email(email, data, false).await
 }
 async fn send_success_email(email: String, data: String) -> Fallible<()> {
+    info!("Sending Confirmation Email to: {:?}", email);
     send_email(email, data, true).await
 }
 async fn send_email(email: String, data: String, success: bool) -> Fallible<()> {
@@ -135,7 +137,6 @@ async fn send_email(email: String, data: String, success: bool) -> Fallible<()> 
         success,
         data,
     };
-    info!("Sending Failure Email to: {:?}", &payload.email);
     let resp = CLIENT
         .post("https://auth-server.holo.host/v1/notify")
         .json(&payload)
@@ -255,6 +256,7 @@ async fn main() -> Fallible<()> {
             Ok(()) => break,
             Err(e) => error!("{}", e),
         }
+        info!("retrying registration on ZT..");
         thread::sleep(backoff);
         backoff += backoff;
     }
