@@ -16,16 +16,30 @@ use zerotier_api::Identity;
 fn get_holoport_url(id: PublicKey) -> String {
     if let Ok(network) = env::var("HOLO_NETWORK") {
         if network == "devNet" {
-            return format!("{:?}.holohost.dev", id);
+            return format!("https://{:?}.holohost.dev", id);
         }
     }
-    format!("{:?}.holohost.net", id)
+    format!("https://{:?}.holohost.net", id)
 }
 
 fn mem_proof_path() -> String {
     match env::var("MEM_PROOF_PATH") {
         Ok(path) => path,
         _ => "/var/lib/configure-holochain/mem-proof".to_string(),
+    }
+}
+
+fn zt_auth_done_notification_path() -> String {
+    match env::var("LED_NOTIFICATIONS_PATH") {
+        Ok(path) => path,
+        _ => "/var/lib/configure-holochain/zt-auth-done-notification".to_string(),
+    }
+}
+
+fn device_bundle_password() -> Option<String> {
+    match env::var("DEVICE_BUNDLE_PASSWORD") {
+        Ok(pass) => Some(pass),
+        _ => None,
     }
 }
 
@@ -83,6 +97,22 @@ struct ZTPayload {
     data: ZTData,
     signature: String,
 }
+async fn retry_holoport_url(id: PublicKey) -> () {
+    let url = get_holoport_url(id);
+    let mut backoff = Duration::from_secs(5);
+    loop {
+        info!("Trying to connect to url: {}", url);
+        if let Ok(resp) = CLIENT.get(url.clone()).send().await {
+            match resp.error_for_status_ref() {
+                Ok(_) => break,
+                Err(e) => error!("{}", e),
+            }
+        }
+        info!("Backing off for : {:?}", backoff);
+        thread::sleep(backoff);
+        backoff += backoff;
+    }
+}
 
 async fn try_zerotier_auth(config: &Config, holochain_public_key: PublicKey) -> Fallible<()> {
     match config {
@@ -104,13 +134,16 @@ async fn try_zerotier_auth(config: &Config, holochain_public_key: PublicKey) -> 
                 })
                 .send()
                 .await?;
-            let response = resp.json().await?;
-            info!("auth-server response: {:?}", response);
+            info!("auth-server response: {:?}", resp);
+            // trying to connect to holoport admin portal
+            retry_holoport_url(holochain_public_key).await;
+            // send sucessfull email once we get a sucessfull response from the holoport admin portal
             send_success_email(
                 settings.admin.email.clone(),
                 get_holoport_url(holochain_public_key),
             )
             .await?;
+            File::create(zt_auth_done_notification_path())?;
         }
         Config::V1 { .. } => return Err(AuthError::ConfigVersionError.into()),
     }
@@ -236,10 +269,7 @@ async fn main() -> Fallible<()> {
 
     tracing::subscriber::set_global_default(subscriber)?;
     let config = get_hpos_config()?;
-    let password = match env::var("DEVICE_BUNDLE_PASSWORD") {
-        Ok(pass) => Some(pass),
-        _ => None,
-    };
+    let password = device_bundle_password();
     let holochain_public_key =
         hpos_config_seed_bundle_explorer::holoport_public_key(&config, password).await?;
     // Get mem-proof by registering on the ops-console
@@ -251,6 +281,7 @@ async fn main() -> Fallible<()> {
     }
     // Register on zerotier
     let mut backoff = Duration::from_secs(1);
+    fs::remove_file(zt_auth_done_notification_path()).ok();
     loop {
         match try_zerotier_auth(&config, holochain_public_key).await {
             Ok(()) => break,
