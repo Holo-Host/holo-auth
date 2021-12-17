@@ -16,10 +16,10 @@ use zerotier_api::Identity;
 fn get_holoport_url(id: PublicKey) -> String {
     if let Ok(network) = env::var("HOLO_NETWORK") {
         if network == "devNet" {
-            return format!("https://{:?}.holohost.dev", id);
+            return format!("https://{:?}.holohost.dev", public_key::to_base36_id(&id));
         }
     }
-    format!("https://{:?}.holohost.net", id)
+    format!("https://{:?}.holohost.net", public_key::to_base36_id(&id))
 }
 
 fn mem_proof_path() -> String {
@@ -76,6 +76,8 @@ pub enum AuthError {
     ConfigVersionError,
     #[fail(display = "Registration Error: {}", _0)]
     RegistrationError(String),
+    #[fail(display = "ZtRegistration Error: {}", _0)]
+    ZtRegistrationError(String),
 }
 
 fn get_hpos_config() -> Fallible<Config> {
@@ -134,6 +136,10 @@ async fn try_zerotier_auth(config: &Config, holochain_public_key: PublicKey) -> 
                 })
                 .send()
                 .await?;
+            //TODO: CHECK FOR status 500
+            if let Err(e) = resp.error_for_status_ref() {
+                return Err(AuthError::ZtRegistrationError(e.to_string()).into());
+            }
             info!("auth-server response: {:?}", resp);
             // trying to connect to holoport admin portal
             retry_holoport_url(holochain_public_key).await;
