@@ -12,7 +12,7 @@ const handle = async req => {
     error: data
   };
   if (success) {
-    const alias = 'successful-registration'
+    alias = 'successful-registration'
     templateModel = {
       holoport_url: data
     }

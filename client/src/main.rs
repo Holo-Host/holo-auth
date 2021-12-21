@@ -101,10 +101,15 @@ struct ZTPayload {
 }
 async fn retry_holoport_url(id: PublicKey) -> () {
     let url = get_holoport_url(id);
-    let mut backoff = Duration::from_secs(5);
+    let backoff = Duration::from_secs(5);
     loop {
         info!("Trying to connect to url: {}", url);
-        if let Ok(resp) = CLIENT.get(url.clone()).send().await {
+        if let Ok(resp) = CLIENT
+            .get(url.clone())
+            .timeout(std::time::Duration::from_millis(2000))
+            .send()
+            .await
+        {
             match resp.error_for_status_ref() {
                 Ok(_) => break,
                 Err(e) => error!("{}", e),
@@ -112,7 +117,6 @@ async fn retry_holoport_url(id: PublicKey) -> () {
         }
         info!("Backing off for : {:?}", backoff);
         thread::sleep(backoff);
-        backoff += backoff;
     }
 }
 
@@ -136,14 +140,13 @@ async fn try_zerotier_auth(config: &Config, holochain_public_key: PublicKey) -> 
                 })
                 .send()
                 .await?;
-            //TODO: CHECK FOR status 500
             if let Err(e) = resp.error_for_status_ref() {
                 return Err(AuthError::ZtRegistrationError(e.to_string()).into());
             }
             info!("auth-server response: {:?}", resp);
             // trying to connect to holoport admin portal
             retry_holoport_url(holochain_public_key).await;
-            // send sucessfull email once we get a sucessfull response from the holoport admin portal
+            // send successful email once we get a successful response from the holoport admin portal
             send_success_email(
                 settings.admin.email.clone(),
                 get_holoport_url(holochain_public_key),
