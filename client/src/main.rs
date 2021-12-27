@@ -4,6 +4,7 @@ use hpos_config_core::{public_key, Config};
 use lazy_static::*;
 use reqwest::Client;
 use serde::*;
+use std::convert::TryInto;
 use std::path::Path;
 use std::time::Duration;
 use std::{env, fmt, fs, fs::File, io::Write, thread};
@@ -11,6 +12,36 @@ use tracing::*;
 use tracing_subscriber::{EnvFilter, FmtSubscriber};
 use uuid::Uuid;
 use zerotier_api::Identity;
+
+fn get_holoport_url(id: PublicKey) -> String {
+    if let Ok(network) = env::var("HOLO_NETWORK") {
+        if network == "devNet" {
+            return format!("https://{}.holohost.dev", public_key::to_base36_id(&id));
+        }
+    }
+    format!("https://{}.holohost.net", public_key::to_base36_id(&id))
+}
+
+fn mem_proof_path() -> String {
+    match env::var("MEM_PROOF_PATH") {
+        Ok(path) => path,
+        _ => "/var/lib/configure-holochain/mem-proof".to_string(),
+    }
+}
+
+fn zt_auth_done_notification_path() -> String {
+    match env::var("LED_NOTIFICATIONS_PATH") {
+        Ok(path) => path,
+        _ => "/var/lib/configure-holochain/zt-auth-done-notification".to_string(),
+    }
+}
+
+fn device_bundle_password() -> Option<String> {
+    match env::var("DEVICE_BUNDLE_PASSWORD") {
+        Ok(pass) => Some(pass),
+        _ => None,
+    }
+}
 
 lazy_static! {
     static ref CLIENT: Client = Client::new();
@@ -39,20 +70,14 @@ struct PostmarkPromise {
     message_id: Uuid,
 }
 
-#[derive(Debug, Serialize)]
-struct Payload {
-    email: String,
-    #[serde(serialize_with = "serialize_holochain_agent_id")]
-    holochain_agent_id: PublicKey,
-    zerotier_address: zerotier_api::Address,
-}
-
 #[derive(Debug, Fail)]
 pub enum AuthError {
     #[fail(display = "Error: Invalid config version used. please upgrade to hpos-config v2")]
     ConfigVersionError,
     #[fail(display = "Registration Error: {}", _0)]
     RegistrationError(String),
+    #[fail(display = "ZtRegistration Error: {}", _0)]
+    ZtRegistrationError(String),
 }
 
 fn get_hpos_config() -> Fallible<Config> {
@@ -62,22 +87,72 @@ fn get_hpos_config() -> Fallible<Config> {
     Ok(config)
 }
 
+#[derive(Debug, Serialize)]
+struct ZTData {
+    email: String,
+    #[serde(serialize_with = "serialize_holochain_agent_id")]
+    holochain_agent_id: PublicKey,
+    zerotier_address: zerotier_api::Address,
+}
+#[derive(Debug, Serialize)]
+struct ZTPayload {
+    data: ZTData,
+    signature: String,
+}
+async fn retry_holoport_url(id: PublicKey) -> () {
+    let url = get_holoport_url(id);
+    let backoff = Duration::from_secs(5);
+    loop {
+        info!("Trying to connect to url: {}", url);
+        if let Ok(resp) = CLIENT
+            .get(url.clone())
+            .timeout(std::time::Duration::from_millis(2000))
+            .send()
+            .await
+        {
+            match resp.error_for_status_ref() {
+                Ok(_) => break,
+                Err(e) => error!("{}", e),
+            }
+        }
+        info!("Backing off for : {:?}", backoff);
+        thread::sleep(backoff);
+    }
+}
+
 async fn try_zerotier_auth(config: &Config, holochain_public_key: PublicKey) -> Fallible<()> {
     match config {
         Config::V2 { settings, .. } => {
             let zerotier_identity = Identity::read_default()?;
-            let payload = Payload {
+            let data = ZTData {
                 email: settings.admin.email.clone(),
-                holochain_agent_id: holochain_public_key,
-                zerotier_address: zerotier_identity.address,
+                holochain_agent_id: holochain_public_key.clone(),
+                zerotier_address: zerotier_identity.address.clone(),
             };
+            let zerotier_keypair: Keypair = zerotier_identity.try_into()?;
+            let data_bytes = serde_json::to_vec(&data)?;
+            let zerotier_signature = zerotier_keypair.sign(&data_bytes[..]);
             let resp = CLIENT
-                .post("https://auth-server.holo.host/v1/challenge")
-                .json(&payload)
+                .post("https://auth-server.holo.host/v1/zt_registration")
+                .json(&ZTPayload {
+                    data,
+                    signature: base64::encode(&zerotier_signature.to_bytes()[..]),
+                })
                 .send()
                 .await?;
-            let promise: PostmarkPromise = resp.json().await?;
-            info!("Postmark message ID: {}", promise.message_id);
+            if let Err(e) = resp.error_for_status_ref() {
+                return Err(AuthError::ZtRegistrationError(e.to_string()).into());
+            }
+            info!("auth-server response: {:?}", resp);
+            // trying to connect to holoport admin portal
+            retry_holoport_url(holochain_public_key).await;
+            // send successful email once we get a successful response from the holoport admin portal
+            send_success_email(
+                settings.admin.email.clone(),
+                get_holoport_url(holochain_public_key),
+            )
+            .await?;
+            File::create(zt_auth_done_notification_path())?;
         }
         Config::V1 { .. } => return Err(AuthError::ConfigVersionError.into()),
     }
@@ -87,11 +162,23 @@ async fn try_zerotier_auth(config: &Config, holochain_public_key: PublicKey) -> 
 #[derive(Debug, Serialize)]
 struct NotifyPayload {
     email: String,
-    error: String,
+    success: bool,
+    data: String,
 }
-async fn send_failure_email(email: String, error: String) -> Fallible<()> {
-    let payload = NotifyPayload { email, error };
-    info!("Sending Failure Email to: {:?}", &payload.email);
+async fn send_failure_email(email: String, data: String) -> Fallible<()> {
+    info!("Sending Failure Email to: {:?}", email);
+    send_email(email, data, false).await
+}
+async fn send_success_email(email: String, data: String) -> Fallible<()> {
+    info!("Sending Confirmation Email to: {:?}", email);
+    send_email(email, data, true).await
+}
+async fn send_email(email: String, data: String, success: bool) -> Fallible<()> {
+    let payload = NotifyPayload {
+        email,
+        success,
+        data,
+    };
     let resp = CLIENT
         .post("https://auth-server.holo.host/v1/notify")
         .json(&payload)
@@ -131,13 +218,6 @@ struct RegistrationError {
 impl fmt::Display for RegistrationError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Error: {}, More Info: {}", self.error, self.info)
-    }
-}
-
-fn mem_proof_path() -> String {
-    match env::var("MEM_PROOF_PATH") {
-        Ok(path) => path,
-        _ => "/var/lib/configure-holochain/mem-proof".to_string(),
     }
 }
 
@@ -198,10 +278,7 @@ async fn main() -> Fallible<()> {
 
     tracing::subscriber::set_global_default(subscriber)?;
     let config = get_hpos_config()?;
-    let password = match env::var("DEVICE_BUNDLE_PASSWORD") {
-        Ok(pass) => Some(pass),
-        _ => None,
-    };
+    let password = device_bundle_password();
     let holochain_public_key =
         hpos_config_seed_bundle_explorer::holoport_public_key(&config, password).await?;
     // Get mem-proof by registering on the ops-console
@@ -213,11 +290,13 @@ async fn main() -> Fallible<()> {
     }
     // Register on zerotier
     let mut backoff = Duration::from_secs(1);
+    fs::remove_file(zt_auth_done_notification_path()).ok();
     loop {
         match try_zerotier_auth(&config, holochain_public_key).await {
             Ok(()) => break,
             Err(e) => error!("{}", e),
         }
+        info!("retrying registration on ZT..");
         thread::sleep(backoff);
         backoff += backoff;
     }
