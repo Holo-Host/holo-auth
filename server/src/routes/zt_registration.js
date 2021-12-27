@@ -1,6 +1,5 @@
 /* global SETTINGS, fetch */
 
-import * as hmac from '../hmac'
 import { respond } from '../util'
 
 const addZeroTierMember = async (address, name, description) => {
@@ -21,8 +20,6 @@ const handle = async req => {
   try {
     const payload = await req.json();
     const { data, signature } = payload
-    // TODO: verify signature
-    // if (!await hmac.verify(Buffer.from(signature, 'base64'), Buffer.from(data))) { return respond(401) }
 
     const { email, holochain_agent_id, zerotier_address } = data
 
