@@ -3,4 +3,7 @@
 const respond = status =>
   new Response(null, { status: status })
 
-export { respond }
+const sleep = s =>
+  new Promise(resolve => setTimeout(resolve, s * 1000))
+
+export { respond, sleep }
