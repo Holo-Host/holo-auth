@@ -105,17 +105,20 @@ async fn try_zerotier_auth(config: &Config, holochain_public_key: PublicKey) -> 
     match config {
         Config::V2 { settings, .. } => {
             let zerotier_identity = Identity::read_default()?;
+
             let data = ZTData {
                 email: settings.admin.email.clone(),
                 holochain_agent_id: holochain_public_key.clone(),
                 zerotier_address: zerotier_identity.address.clone(),
                 holoport_url: get_holoport_url(holochain_public_key),
             };
+
             let zerotier_keypair: Keypair = zerotier_identity.try_into()?;
             let data_bytes = serde_json::to_vec(&data)?;
             let zerotier_signature = zerotier_keypair.sign(&data_bytes[..]);
+            let url = format!("{}/v1/zt_registration", env::var("AUTH_SERVER_URL")?);
             let resp = CLIENT
-                .post("https://auth-server.holo.host/v1/zt_registration")
+                .post(url)
                 .json(&ZTPayload {
                     data,
                     signature: base64::encode(&zerotier_signature.to_bytes()[..]),
@@ -149,8 +152,9 @@ async fn send_email(email: String, data: String, success: bool) -> Fallible<()> 
         success,
         data,
     };
+    let url = format!("{}/v1/notify", env::var("AUTH_SERVER_URL")?);
     let resp = CLIENT
-        .post("https://auth-server.holo.host/v1/notify")
+        .post(url)
         .json(&payload)
         .send()
         .await?;
