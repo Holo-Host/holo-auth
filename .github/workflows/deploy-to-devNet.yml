@@ -11,9 +11,6 @@ jobs:
     name: Deploy
     steps:
       - uses: actions/checkout@v2
-      - run: npm ci
-      - name: Build site
-        run: 'npm run build'
       - name: Publish to devNet
         uses: cloudflare/wrangler-action@1.1.0
         with:
