@@ -31,7 +31,7 @@ const connectToHoloport = async (holoport_url) => {
   do {
     try {
       res = await fetch(holoport_url)
-      if (res.ok) return new Promise.resolve()
+      if (res.ok) return res
     } catch (e) {
       // do nothing with error
     }
@@ -59,7 +59,7 @@ const handle = async req => {
     return sendEmail({ email, success: true, data: holoport_url })
   } catch (e) {
     console.log(e)
-    respond(401)
+    return respond(401)
   }
 }
 
