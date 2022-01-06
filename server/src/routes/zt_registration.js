@@ -45,8 +45,7 @@ const connectToHoloport = async (holoport_url) => {
 const handle = async req => {
   try {
     const payload = await req.json();
-    const { data, signature } = payload
-
+    const { data } = payload
     const { email, holochain_agent_id, zerotier_address, holoport_url } = data
 
     let res = await addZeroTierMember(zerotier_address, holochain_agent_id, email)

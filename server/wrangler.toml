@@ -8,7 +8,3 @@ route = "auth-server.holo.host/*"
 [[kv-namespaces]]
 binding = "SETTINGS"
 id = "5181f479e6d84fc9835c5195b08a7029"
-
-[[kv-namespaces]]
-binding = "WHITELIST"
-id = "3130e2ca2d234214ba9db91622f7f197"

@@ -1,4 +1,4 @@
-/* global SETTINGS, WHITELIST, fetch */
+/* global SETTINGS, fetch */
 
 const isInternal = email => email.endsWith('@holo.host')
 
