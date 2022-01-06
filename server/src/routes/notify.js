@@ -1,16 +1,21 @@
-/* global SETTINGS, WHITELIST, fetch */
+/* global SETTINGS, fetch */
 
 const isInternal = email => email.endsWith('@holo.host')
 
 const handle = async req => {
-  const serverToken = await SETTINGS.get('postmark_server_token')
   const val = await req.json()
-  let { email, success, data } = val
+  return sendEmail(val)
+}
 
+const sendEmail = async (val) => {
+  const serverToken = await SETTINGS.get('postmark_server_token')
+
+  let { email, success, data } = val
   let alias = 'failed-registration'
   let templateModel = {
     error: data
   };
+
   if (success) {
     alias = 'successful-registration'
     templateModel = {
@@ -38,4 +43,4 @@ const handle = async req => {
   })
 }
 
-export { handle }
+export { handle, sendEmail }

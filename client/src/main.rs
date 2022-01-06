@@ -93,47 +93,32 @@ struct ZTData {
     #[serde(serialize_with = "serialize_holochain_agent_id")]
     holochain_agent_id: PublicKey,
     zerotier_address: zerotier_api::Address,
+    holoport_url: String,
 }
 #[derive(Debug, Serialize)]
 struct ZTPayload {
     data: ZTData,
     signature: String,
 }
-async fn retry_holoport_url(id: PublicKey) -> () {
-    let url = get_holoport_url(id);
-    let backoff = Duration::from_secs(5);
-    loop {
-        info!("Trying to connect to url: {}", url);
-        if let Ok(resp) = CLIENT
-            .get(url.clone())
-            .timeout(std::time::Duration::from_millis(2000))
-            .send()
-            .await
-        {
-            match resp.error_for_status_ref() {
-                Ok(_) => break,
-                Err(e) => error!("{}", e),
-            }
-        }
-        info!("Backing off for : {:?}", backoff);
-        thread::sleep(backoff);
-    }
-}
 
 async fn try_zerotier_auth(config: &Config, holochain_public_key: PublicKey) -> Fallible<()> {
     match config {
         Config::V2 { settings, .. } => {
             let zerotier_identity = Identity::read_default()?;
+
             let data = ZTData {
                 email: settings.admin.email.clone(),
                 holochain_agent_id: holochain_public_key.clone(),
                 zerotier_address: zerotier_identity.address.clone(),
+                holoport_url: get_holoport_url(holochain_public_key),
             };
+
             let zerotier_keypair: Keypair = zerotier_identity.try_into()?;
             let data_bytes = serde_json::to_vec(&data)?;
             let zerotier_signature = zerotier_keypair.sign(&data_bytes[..]);
+            let url = format!("{}/v1/zt_registration", env::var("AUTH_SERVER_URL")?);
             let resp = CLIENT
-                .post("https://auth-server.holo.host/v1/zt_registration")
+                .post(url)
                 .json(&ZTPayload {
                     data,
                     signature: base64::encode(&zerotier_signature.to_bytes()[..]),
@@ -144,14 +129,6 @@ async fn try_zerotier_auth(config: &Config, holochain_public_key: PublicKey) -> 
                 return Err(AuthError::ZtRegistrationError(e.to_string()).into());
             }
             info!("auth-server response: {:?}", resp);
-            // trying to connect to holoport admin portal
-            retry_holoport_url(holochain_public_key).await;
-            // send successful email once we get a successful response from the holoport admin portal
-            send_success_email(
-                settings.admin.email.clone(),
-                get_holoport_url(holochain_public_key),
-            )
-            .await?;
             File::create(zt_auth_done_notification_path())?;
         }
         Config::V1 { .. } => return Err(AuthError::ConfigVersionError.into()),
@@ -169,18 +146,15 @@ async fn send_failure_email(email: String, data: String) -> Fallible<()> {
     info!("Sending Failure Email to: {:?}", email);
     send_email(email, data, false).await
 }
-async fn send_success_email(email: String, data: String) -> Fallible<()> {
-    info!("Sending Confirmation Email to: {:?}", email);
-    send_email(email, data, true).await
-}
 async fn send_email(email: String, data: String, success: bool) -> Fallible<()> {
     let payload = NotifyPayload {
         email,
         success,
         data,
     };
+    let url = format!("{}/v1/notify", env::var("AUTH_SERVER_URL")?);
     let resp = CLIENT
-        .post("https://auth-server.holo.host/v1/notify")
+        .post(url)
         .json(&payload)
         .send()
         .await?;
