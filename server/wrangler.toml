@@ -1,10 +1,14 @@
-name = "holo-auth-server"
+name = "devnet-auth-server"
 type = "webpack"
 webpack_config = "webpack.config.js"
 account_id = "18ff2b4e6205b938652998cfca0d8cff"
 zone_id = "35f34e8f9d04ef8c87283ea9fb812989"
-route = "auth-server.holo.host/*"
+route = "devnet-auth-server.holo.host/*"
 
 [[kv-namespaces]]
 binding = "SETTINGS"
 id = "5181f479e6d84fc9835c5195b08a7029"
+
+[env.alphanet]
+name = "auth-server"
+route = "auth-server.holo.host/*"

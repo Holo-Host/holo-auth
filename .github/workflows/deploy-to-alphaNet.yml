@@ -1,0 +1,22 @@
+name: Continuous Deployment to alphaNet
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy
+    steps:
+      - uses: actions/checkout@v2
+      - run: npm ci
+      - name: Build site
+        run: 'npm run build'
+      - name: Publish to alphaNet
+        uses: cloudflare/wrangler-action@1.1.0
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          workingDirectory: 'server'
+          environment: alphanet
