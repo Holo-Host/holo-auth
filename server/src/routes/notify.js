@@ -3,19 +3,19 @@
 const isInternal = email => email.endsWith('@holo.host')
 
 const handle = async req => {
-  const serverToken = await SETTINGS.get('postmark_server_token')
   const val = await req.json()
-
   return sendEmail(val)
 }
 
 const sendEmail = async (val) => {
-  let { email, success, data } = val
+  const serverToken = await SETTINGS.get('postmark_server_token')
 
+  let { email, success, data } = val
   let alias = 'failed-registration'
   let templateModel = {
     error: data
   };
+
   if (success) {
     alias = 'successful-registration'
     templateModel = {
