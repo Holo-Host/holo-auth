@@ -129,7 +129,6 @@ async fn try_zerotier_auth(config: &Config, holochain_public_key: PublicKey) -> 
                 return Err(AuthError::ZtRegistrationError(e.to_string()).into());
             }
             info!("auth-server response: {:?}", resp);
-            File::create(zt_auth_done_notification_path())?;
         }
         Config::V1 { .. } => return Err(AuthError::ConfigVersionError.into()),
     }
@@ -153,11 +152,7 @@ async fn send_email(email: String, data: String, success: bool) -> Fallible<()> 
         data,
     };
     let url = format!("{}/v1/notify", env::var("AUTH_SERVER_URL")?);
-    let resp = CLIENT
-        .post(url)
-        .json(&payload)
-        .send()
-        .await?;
+    let resp = CLIENT.post(url).json(&payload).send().await?;
     info!("Response from email: {:?}", &resp);
     let promise: PostmarkPromise = resp.json().await?;
     info!("Postmark message ID: {}", promise.message_id);
