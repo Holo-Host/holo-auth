@@ -30,7 +30,7 @@ fn mem_proof_path() -> String {
 }
 
 fn zt_auth_done_notification_path() -> String {
-    match env::var("LED_NOTIFICATIONS_PATH") {
+    match env::var("ZT_NOTIFICATIONS_PATH") {
         Ok(path) => path,
         _ => "/var/lib/configure-holochain/zt-auth-done-notification".to_string(),
     }
@@ -129,6 +129,7 @@ async fn try_zerotier_auth(config: &Config, holochain_public_key: PublicKey) -> 
                 return Err(AuthError::ZtRegistrationError(e.to_string()).into());
             }
             info!("auth-server response: {:?}", resp);
+            File::create(zt_auth_done_notification_path())?;
         }
         Config::V1 { .. } => return Err(AuthError::ConfigVersionError.into()),
     }
