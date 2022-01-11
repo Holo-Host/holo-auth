@@ -30,7 +30,7 @@ fn mem_proof_path() -> String {
 }
 
 fn zt_auth_done_notification_path() -> String {
-    match env::var("LED_NOTIFICATIONS_PATH") {
+    match env::var("ZT_NOTIFICATIONS_PATH") {
         Ok(path) => path,
         _ => "/var/lib/configure-holochain/zt-auth-done-notification".to_string(),
     }
@@ -153,11 +153,7 @@ async fn send_email(email: String, data: String, success: bool) -> Fallible<()> 
         data,
     };
     let url = format!("{}/v1/notify", env::var("AUTH_SERVER_URL")?);
-    let resp = CLIENT
-        .post(url)
-        .json(&payload)
-        .send()
-        .await?;
+    let resp = CLIENT.post(url).json(&payload).send().await?;
     info!("Response from email: {:?}", &resp);
     let promise: PostmarkPromise = resp.json().await?;
     info!("Postmark message ID: {}", promise.message_id);
