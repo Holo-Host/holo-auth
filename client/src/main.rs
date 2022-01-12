@@ -22,6 +22,13 @@ fn get_holoport_url(id: PublicKey) -> String {
     format!("https://{}.holohost.net", public_key::to_base36_id(&id))
 }
 
+fn mem_proof_server_url() -> String {
+    match env::var("MEM_PROOF_SERVER_URL") {
+        Ok(url) => url,
+        _ => "https://test-membrane-proof-service.holo.host".to_string(),
+    }
+}
+
 fn mem_proof_path() -> String {
     match env::var("MEM_PROOF_PATH") {
         Ok(path) => path,
@@ -207,9 +214,9 @@ async fn try_registration_auth(config: &Config, holochain_public_key: PublicKey)
                     role: "host".to_string(),
                 },
             };
-
+            let mem_proof_server_url = format!("{}/register-user/", mem_proof_server_url());
             let resp = CLIENT
-                .post("https://test-membrane-proof-service.holo.host/register-user/")
+                .post(mem_proof_server_url)
                 .json(&payload)
                 .send()
                 .await?;
