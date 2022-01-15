@@ -12,6 +12,8 @@ use tracing::*;
 use tracing_subscriber::{EnvFilter, FmtSubscriber};
 use uuid::Uuid;
 use zerotier_api::Identity;
+mod validation;
+use validation::init_validation;
 
 fn get_holoport_url(id: PublicKey) -> String {
     if let Ok(network) = env::var("HOLO_NETWORK") {
@@ -58,7 +60,7 @@ fn serialize_holochain_agent_id<S>(public_key: &PublicKey, serializer: S) -> Res
 where
     S: Serializer,
 {
-    serializer.serialize_str(&public_key::to_base36_id(&public_key))
+    serializer.serialize_str(&public_key::to_base36_id(public_key))
 }
 
 fn serialize_holochain_agent_pub_key<S>(
@@ -68,7 +70,7 @@ fn serialize_holochain_agent_pub_key<S>(
 where
     S: Serializer,
 {
-    serializer.serialize_str(&public_key::to_holochain_encoded_agent_key(&public_key))
+    serializer.serialize_str(&public_key::to_holochain_encoded_agent_key(public_key))
 }
 
 #[derive(Debug, Deserialize)]
@@ -85,6 +87,8 @@ pub enum AuthError {
     RegistrationError(String),
     #[fail(display = "ZtRegistration Error: {}", _0)]
     ZtRegistrationError(String),
+    #[fail(display = "InitializationError Error: {}", _0)]
+    InitializationError(String),
 }
 
 fn get_hpos_config() -> Fallible<Config> {
@@ -115,7 +119,7 @@ async fn try_zerotier_auth(config: &Config, holochain_public_key: PublicKey) -> 
 
             let data = ZTData {
                 email: settings.admin.email.clone(),
-                holochain_agent_id: holochain_public_key.clone(),
+                holochain_agent_id: holochain_public_key,
                 zerotier_address: zerotier_identity.address.clone(),
                 holoport_url: get_holoport_url(holochain_public_key),
             };
@@ -254,6 +258,13 @@ async fn main() -> Fallible<()> {
         .finish();
 
     tracing::subscriber::set_global_default(subscriber)?;
+
+    // Check if the holoport is in the right state before proceeding
+    if let Err(e) = init_validation().await {
+        error!("Initialization Failed: {}", e);
+        return Err(e);
+    }
+
     let config = get_hpos_config()?;
     let password = device_bundle_password();
     let holochain_public_key =
