@@ -1474,21 +1474,7 @@ dependencies = [
  "rmpv",
  "serde",
  "serde_bytes",
- "sodoken 0.0.1",
-]
-
-[[package]]
-name = "hc_seed_bundle"
-version = "0.1.0"
-source = "git+https://github.com/holochain/lair?branch=patch-15-11#bbbe8af9f16e84585666aae8415776c09a88db02"
-dependencies = [
- "futures",
- "one_err",
- "rmp-serde",
- "rmpv",
- "serde",
- "serde_bytes",
- "sodoken 0.0.1-alpha21",
+ "sodoken",
 ]
 
 [[package]]
@@ -1583,7 +1569,7 @@ dependencies = [
  "one_err",
  "serde",
  "serde_bytes",
- "sodoken 0.0.1",
+ "sodoken",
  "thiserror",
  "tokio",
  "tracing",
@@ -1786,7 +1772,7 @@ dependencies = [
 [[package]]
 name = "hpos-config-core"
 version = "0.1.1"
-source = "git+https://github.com/Holo-Host/hpos-config?rev=045a9d145e2b67bf783e32380a23672f010eb905#045a9d145e2b67bf783e32380a23672f010eb905"
+source = "git+https://github.com/Holo-Host/hpos-config?rev=952d51f4ab7c13a246a9a6b0e9b8865960e04dbf#952d51f4ab7c13a246a9a6b0e9b8865960e04dbf"
 dependencies = [
  "argon2min",
  "arrayref",
@@ -1804,16 +1790,16 @@ dependencies = [
 [[package]]
 name = "hpos-config-seed-bundle-explorer"
 version = "0.1.0"
-source = "git+https://github.com/Holo-Host/hpos-config?rev=045a9d145e2b67bf783e32380a23672f010eb905#045a9d145e2b67bf783e32380a23672f010eb905"
+source = "git+https://github.com/Holo-Host/hpos-config?rev=952d51f4ab7c13a246a9a6b0e9b8865960e04dbf#952d51f4ab7c13a246a9a6b0e9b8865960e04dbf"
 dependencies = [
  "base64",
  "ed25519-dalek",
- "hc_seed_bundle 0.1.0 (git+https://github.com/holochain/lair?branch=patch-15-11)",
+ "hc_seed_bundle",
  "hpos-config-core",
  "one_err",
  "rmp-serde",
  "serde_json",
- "sodoken 0.0.1-alpha21",
+ "sodoken",
  "thiserror",
 ]
 
@@ -2218,7 +2204,7 @@ dependencies = [
  "rayon",
  "rcgen",
  "ring",
- "sodoken 0.0.1",
+ "sodoken",
  "subtle",
  "thiserror",
  "tokio",
@@ -2234,7 +2220,7 @@ checksum = "821c3eed9a5a27a9e225fcd0ecb340ef810a4078b6b0207bb26daee0744d963c"
 dependencies = [
  "base64",
  "dunce",
- "hc_seed_bundle 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "hc_seed_bundle",
  "lru",
  "nanoid 0.4.0",
  "once_cell",
@@ -2259,7 +2245,7 @@ dependencies = [
  "futures",
  "ghost_actor",
  "lair_keystore_api 0.0.9",
- "sodoken 0.0.1",
+ "sodoken",
  "tempfile",
  "tokio",
  "tracing",
@@ -4004,20 +3990,6 @@ checksum = "5dc90fe6c7be1a323296982db1836d1ea9e47b6839496dde9a541bc496df3516"
 dependencies = [
  "libc",
  "winapi",
-]
-
-[[package]]
-name = "sodoken"
-version = "0.0.1-alpha21"
-source = "git+https://github.com/zo-el/sodoken?branch=v0.0.1-alpha21#a46ecc30dc3e71ed17f2d887dd0b6c4fd40f6048"
-dependencies = [
- "libc",
- "libsodium-sys",
- "num_cpus",
- "once_cell",
- "one_err",
- "parking_lot 0.11.2",
- "tokio",
 ]
 
 [[package]]

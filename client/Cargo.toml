@@ -21,8 +21,8 @@ holochain_types = "0.0.17"
 
 [dependencies.hpos-config-core]
 git = "https://github.com/Holo-Host/hpos-config"
-rev = "045a9d145e2b67bf783e32380a23672f010eb905"
+rev = "952d51f4ab7c13a246a9a6b0e9b8865960e04dbf"
 
 [dependencies.hpos-config-seed-bundle-explorer]
 git = "https://github.com/Holo-Host/hpos-config"
-rev = "045a9d145e2b67bf783e32380a23672f010eb905"
+rev = "952d51f4ab7c13a246a9a6b0e9b8865960e04dbf"
