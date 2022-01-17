@@ -8,20 +8,21 @@ ed25519-dalek = { version = "1.0.1", features = ["serde"] }
 failure = "0.1"
 lazy_static = "1"
 reqwest = { version = "0.11.6", features = ["json"] }
-serde = { version = "1", features = ["derive"] }
+serde = { version = "1.0.123", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1.14.0", features = ["rt-multi-thread", "macros"] }
 tracing = "0.1"
 tracing-futures = "0.2"
 tracing-subscriber = "0.2"
 uuid = { version = "0.8", features = ["serde", "v4"] }
-zerotier-api = "0.1.0"
+zerotier-api = "0.1"
 base64 = "0.13.0"
+holochain_types = "0.0.17"
 
 [dependencies.hpos-config-core]
 git = "https://github.com/Holo-Host/hpos-config"
-rev = "045a9d145e2b67bf783e32380a23672f010eb905"
+rev = "952d51f4ab7c13a246a9a6b0e9b8865960e04dbf"
 
 [dependencies.hpos-config-seed-bundle-explorer]
 git = "https://github.com/Holo-Host/hpos-config"
-rev = "045a9d145e2b67bf783e32380a23672f010eb905"
+rev = "952d51f4ab7c13a246a9a6b0e9b8865960e04dbf"
