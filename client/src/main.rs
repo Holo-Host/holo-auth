@@ -41,7 +41,7 @@ fn mem_proof_path() -> String {
 fn zt_auth_done_notification_path() -> String {
     match env::var("ZT_NOTIFICATIONS_PATH") {
         Ok(path) => path,
-        _ => "/var/lib/configure-holochain/zt-auth-done-notification".to_string(),
+        _ => "/var/lib/holo-auth/zt-auth-done-notification".to_string(),
     }
 }
 
