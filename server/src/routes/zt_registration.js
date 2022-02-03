@@ -5,6 +5,12 @@ import { respond } from '../util'
 const addZeroTierMember = async (address, name, description) => {
   const apiToken = await SETTINGS.get('zerotier_central_api_token')
   const networkId = await SETTINGS.get('zerotier_network_id')
+  // deregister any old entries before creating new entries
+  fetch(`https://my.zerotier.com/api/network/${networkId}/member/${address}`, {
+    method: 'DELETE',
+    headers: { authorization: `Bearer ${apiToken}` }
+  }).then(() => console.log("Old entries were deleted"))
+    .catch((e) => console.log("No old entries found"))
   return fetch(`https://my.zerotier.com/api/network/${networkId}/member/${address}`, {
     method: 'POST',
     headers: { authorization: `Bearer ${apiToken}` },
