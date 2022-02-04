@@ -27,7 +27,7 @@ const addZeroTierMember = async (address, name, description) => {
 
 /**
  * It clears all the members that have the same name as the one that is being added.
- * @param name - The name of the member you want to clear
+ * @param name - The name (holoport_id) of the member you want to clear.
  * @param apiToken - The API token for the zerotier network
  * @param networkId - The ID of the network you want to join.
  */
