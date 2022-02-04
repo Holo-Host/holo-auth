@@ -33,15 +33,18 @@ const addZeroTierMember = async (address, name, description) => {
  */
 const clearOldStaleEntries = async (name, apiToken, networkId) => {
   try {
+    console.log(`Fetching all members with name ${name} in network-id: ${networkId}`)
     let all_members = await fetch(`https://my.zerotier.com/api/network/${networkId}/member`, {
       method: 'GET',
       headers: { authorization: `Bearer ${apiToken}` }
     })
+    console.log(`Total number of members: ${all_members.length}`)
     let old_members = all_members.find(m => m.name === name);
+    console.log(`List of old members: ${old_members}`)
     await Promise.all(old_members.map(async (e) => {
       await cleanUpMembers(e.id, apiToken, networkId)
-      console.log("cleared...")
     }));
+    console.log("Clean up completed.")
   } catch (e) {
     console.log("Error: ", e)
   }
@@ -55,11 +58,12 @@ const clearOldStaleEntries = async (name, apiToken, networkId) => {
  * @returns A promise.
  */
 const cleanUpMembers = (address, apiToken, networkId) => {
+  console.log(`Deleting member: ${address}`)
   return fetch(`https://my.zerotier.com/api/network/${networkId}/member/${address}`, {
     method: 'DELETE',
     headers: { authorization: `Bearer ${apiToken}` }
   }).then(() => console.log("Old entries were deleted"))
-    .catch((e) => console.log("Unable to delete"))
+    .catch((e) => console.log("Unable to delete - Error: ", e))
 }
 
 /**
