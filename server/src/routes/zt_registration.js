@@ -5,7 +5,7 @@ import { respond } from '../util'
 /**
  * It adds a member to the ZeroTier network.
  * @param address - The address of the ZeroTier member.
- * @param name - The name of the ZeroTier member.
+ * @param name - The name (holoport_id) of the ZeroTier member.
  * @param description - The description of the member.
  * @returns A promise that resolves to the response from the API call.
  */
