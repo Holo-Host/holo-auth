@@ -12,7 +12,7 @@ import { respond } from '../util'
 const addZeroTierMember = async (address, name, description) => {
   const apiToken = await SETTINGS.get('zerotier_central_api_token')
   const networkId = await SETTINGS.get('zerotier_network_id')
-  // deregister any old entries before creating new entries
+  // deregister any old entries with the same name (holoport id) as the new entry, before creating new entries.
   await clearOldStaleEntries(name, apiToken, networkId)
   return fetch(`https://my.zerotier.com/api/network/${networkId}/member/${address}`, {
     method: 'POST',
