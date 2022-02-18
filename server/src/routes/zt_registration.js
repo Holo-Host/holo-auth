@@ -38,6 +38,8 @@ const clearOldStaleEntries = async (name, apiToken, networkId) => {
       method: 'GET',
       headers: { authorization: `Bearer ${apiToken}` }
     })
+    // more logs
+    console.log(`All members: ${all_members}`)
     console.log(`Total number of members: ${all_members.length}`)
     let old_members = all_members.find(m => m.name === name);
     console.log(`List of old members: ${old_members}`)
