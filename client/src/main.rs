@@ -251,6 +251,19 @@ async fn try_registration_auth(config: &Config, holochain_public_key: PublicKey)
     Ok(())
 }
 
+fn zt_should_exec() -> bool {
+    match env::var("ZT_STATUS") {
+        Ok(pass) => {
+            if pass == "ACCESS_DENIED" {
+                true
+            } else {
+                false
+            }
+        }
+        _ => false,
+    }
+}
+
 #[tokio::main]
 async fn main() -> Fallible<()> {
     let subscriber = FmtSubscriber::builder()
@@ -277,16 +290,18 @@ async fn main() -> Fallible<()> {
         }
     }
     // Register on zerotier
-    let mut backoff = Duration::from_secs(1);
-    fs::remove_file(zt_auth_done_notification_path()).ok();
-    loop {
-        match try_zerotier_auth(&config, holochain_public_key).await {
-            Ok(()) => break,
-            Err(e) => error!("{}", e),
+    if zt_should_exec() {
+        let mut backoff = Duration::from_secs(1);
+        fs::remove_file(zt_auth_done_notification_path()).ok();
+        loop {
+            match try_zerotier_auth(&config, holochain_public_key).await {
+                Ok(()) => break,
+                Err(e) => error!("{}", e),
+            }
+            info!("retrying registration on ZT..");
+            thread::sleep(backoff);
+            backoff += backoff;
         }
-        info!("retrying registration on ZT..");
-        thread::sleep(backoff);
-        backoff += backoff;
     }
     Ok(())
 }
