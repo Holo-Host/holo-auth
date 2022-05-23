@@ -61,8 +61,13 @@ const clearOldStaleEntries = async (name, apiToken, networkId) => {
 const cleanUpMembers = (address, apiToken, networkId) => {
   console.log(`Deleting member: ${address}`)
   return fetch(`https://my.zerotier.com/api/network/${networkId}/member/${address}`, {
-    method: 'DELETE',
-    headers: { authorization: `Bearer ${apiToken}` }
+    method: 'POST',
+    headers: { authorization: `Bearer ${apiToken}` },
+    body: JSON.stringify({
+      config: {
+        authorized: false
+      }
+    })
   }).then((resp) => console.log("Old entries were deleted: ", resp))
     .catch((e) => console.log("Unable to delete - Error: ", e))
 }
