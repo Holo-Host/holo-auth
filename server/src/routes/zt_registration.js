@@ -68,8 +68,8 @@ const cleanUpMembers = (address, apiToken, networkId) => {
         authorized: false
       }
     })
-  }).then((resp) => console.log("Old entries were deleted: ", resp))
-    .catch((e) => console.log("Unable to delete - Error: ", e))
+  }).then((resp) => console.log("Old entries were deauthorized: ", resp))
+    .catch((e) => console.log("Unable to deauthorize - Error: ", e))
 }
 
 /**
