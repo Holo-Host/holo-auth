@@ -27,7 +27,7 @@ fn get_holoport_url(id: PublicKey) -> String {
 fn mem_proof_server_url() -> String {
     match env::var("MEM_PROOF_SERVER_URL") {
         Ok(url) => url,
-        _ => "https://test-membrane-proof-service.holo.host".to_string(),
+        _ => "https://hbs.dev.holotest.net".to_string(),
     }
 }
 
@@ -218,7 +218,7 @@ async fn try_registration_auth(config: &Config, holochain_public_key: PublicKey)
                     role: "host".to_string(),
                 },
             };
-            let mem_proof_server_url = format!("{}/register-user/", mem_proof_server_url());
+            let mem_proof_server_url = format!("{}/registration/api/v1/membrane-proof", mem_proof_server_url());
             let resp = CLIENT
                 .post(mem_proof_server_url)
                 .json(&payload)
