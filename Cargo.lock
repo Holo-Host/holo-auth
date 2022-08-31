@@ -79,7 +79,7 @@ dependencies = [
 [[package]]
 name = "argon2min"
 version = "0.3.0"
-source = "git+https://github.com/Holo-Host/argon2min?branch=2019-10-13-holo-config#65627302021261496067933fa100487304fc5c61"
+source = "git+https://github.com/Holo-Host/argon2min?rev=28e765e4369e19bc0126bb46acaacadf1303de22#28e765e4369e19bc0126bb46acaacadf1303de22"
 dependencies = [
  "blake2-rfc",
 ]
@@ -341,8 +341,9 @@ checksum = "a4521f3e3d031370679b3b140beb36dfe4801b09ac77e30c61941f97df3ef28b"
 
 [[package]]
 name = "base36"
-version = "0.0.0"
-source = "git+https://github.com/transumption-unstable/base36?branch=2019-12-18-nix#4e6981e13ec5f3748dfe9b8870aa4e8ed749096d"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b9c26bddc1271f7112e5ec797e8eeba6de2de211c1488e506b9500196dbf77c5"
 dependencies = [
  "base-x",
  "failure",
@@ -1772,7 +1773,7 @@ dependencies = [
 [[package]]
 name = "hpos-config-core"
 version = "0.1.1"
-source = "git+https://github.com/Holo-Host/hpos-config?rev=952d51f4ab7c13a246a9a6b0e9b8865960e04dbf#952d51f4ab7c13a246a9a6b0e9b8865960e04dbf"
+source = "git+https://github.com/Holo-Host/hpos-config?rev=e360b7c122ccd0281f8c573ece1b851539ebed76#e360b7c122ccd0281f8c573ece1b851539ebed76"
 dependencies = [
  "argon2min",
  "arrayref",
@@ -1790,7 +1791,7 @@ dependencies = [
 [[package]]
 name = "hpos-config-seed-bundle-explorer"
 version = "0.1.0"
-source = "git+https://github.com/Holo-Host/hpos-config?rev=952d51f4ab7c13a246a9a6b0e9b8865960e04dbf#952d51f4ab7c13a246a9a6b0e9b8865960e04dbf"
+source = "git+https://github.com/Holo-Host/hpos-config?rev=e360b7c122ccd0281f8c573ece1b851539ebed76#e360b7c122ccd0281f8c573ece1b851539ebed76"
 dependencies = [
  "base64",
  "ed25519-dalek",
