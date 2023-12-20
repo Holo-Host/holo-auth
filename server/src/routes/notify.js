@@ -39,7 +39,8 @@ const sendEmail = async (val) => {
   return fetch('https://api.postmarkapp.com/email/withTemplate', {
     method: 'POST',
     headers: {
-      accept: 'application/json',
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
       'x-postmark-server-token': serverToken
     },
     body: JSON.stringify(payload)
