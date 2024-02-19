@@ -2,10 +2,10 @@
   "main": "src/index.js",
   "devDependencies": {
     "@dollarshaveclub/cloudworker": "^0.1.2",
-    "form-data": "^2.5.1",
-    "standard": "^14.3.1",
-    "webpack": "^4.41.2",
-    "webpack-cli": "^3.3.9"
+    "form-data": "^4.0.0",
+    "standard": "^17.1.0",
+    "webpack": "^5.90.3",
+    "webpack-cli": "^5.1.4"
   },
   "scripts": {
     "build": "webpack",
