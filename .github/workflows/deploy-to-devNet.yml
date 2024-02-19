@@ -12,7 +12,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Publish to devNet
-        uses: cloudflare/wrangler-action@1.1.0
+        uses: cloudflare/wrangler-action@2.0.0
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
+          preCommands: 'yarn add @cloudflare/kv-asset-handler'
           workingDirectory: 'server'

@@ -1,14 +1,19 @@
 name = "devnet-auth-server"
-type = "webpack"
-webpack_config = "webpack.config.js"
 account_id = "18ff2b4e6205b938652998cfca0d8cff"
-zone_id = "35f34e8f9d04ef8c87283ea9fb812989"
 route = "devnet-auth-server.holo.host/*"
+compatibility_date = "2024-02-19"
+kv_namespaces = [
+    { binding = "SETTINGS", id = "5181f479e6d84fc9835c5195b08a7029"}
+]
 
-[[kv-namespaces]]
-binding = "SETTINGS"
-id = "5181f479e6d84fc9835c5195b08a7029"
+[build]
+command = "npm install && npm run build"
 
 [env.alphanet]
 name = "auth-server"
 route = "auth-server.holo.host/*"
+kv_namespaces = [
+    { binding = "SETTINGS", id = "5181f479e6d84fc9835c5195b08a7029"}
+]
+
+main = "dist/main.js"
