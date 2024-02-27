@@ -73,6 +73,45 @@ const cleanUpMembers = (address, apiToken, networkId) => {
 }
 
 /**
+ * Check if a given user (identified by email) is alredy registered and if registration parameters are correct
+ * @param email
+ */
+const isVerifiedUser = async (email) => {
+  const mongodbApiKey = await SETTINGS.get('mongodb_api_key')
+  const mongodbApiUrl = "https://eu-central-1.aws.data.mongodb-api.com/app/data-fcrur/endpoint/data/v1/action/findOne"
+
+  let headers = new Headers()
+  headers.append("Content-Type", "application/json")
+  headers.append("api-key", mongodbApiKey)
+
+  let filter = {
+    "collection":"registrations",
+    "database":"opsconsoledb",
+    "dataSource":"Cluster0",
+    "filter": {
+      "email": email
+    }
+  }
+
+  let resp = await fetch(mongodbApiUrl, {
+    headers,
+    method: "POST",
+    body: JSON.stringify(filter)
+  })
+
+  let user = await resp.json()
+
+  if (user.document && user.document.registrationCode.length > 0) {
+    let host = user.document.registrationCode.find(el => el.role === "host")
+
+    if (host.approved) return true
+  }
+
+  console.log(`user ${email} was not found in registration database`)
+  return false
+}
+
+/**
  * It adds a new member to the ZeroTier network.
  * @returns A 200 status code and a message.
  */
@@ -82,7 +121,9 @@ const handle = async req => {
     const { data } = payload
     const { email, holochain_agent_id, zerotier_address, holoport_url } = data
 
-    return addZeroTierMember(zerotier_address, holochain_agent_id, email)
+    if (isVerifiedUser(email)) return addZeroTierMember(zerotier_address, holochain_agent_id, email)
+
+    respond(401)
   } catch (e) {
     console.log(e)
     return respond(401)
