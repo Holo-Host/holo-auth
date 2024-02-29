@@ -123,7 +123,7 @@ const handle = async req => {
 
     if (isVerifiedUser(email)) return addZeroTierMember(zerotier_address, holochain_agent_id, email)
 
-    respond(401)
+    return respond(401)
   } catch (e) {
     console.log(e)
     return respond(401)
