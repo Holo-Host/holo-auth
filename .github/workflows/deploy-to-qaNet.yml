@@ -1,0 +1,19 @@
+name: Continuous Deployment to qaNet
+
+on:
+  push:
+    branches:
+      - QA
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy server
+    steps:
+      - uses: actions/checkout@v2
+      - name: Publish to qaNet
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          workingDirectory: 'server'
+          environment: qanet
