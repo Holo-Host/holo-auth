@@ -2,7 +2,6 @@ name = "devnet-auth-server"
 account_id = "18ff2b4e6205b938652998cfca0d8cff"
 route = "devnet-auth-server.holo.host/*"
 compatibility_date = "2024-02-19"
-main = "dist/main.js"
 kv_namespaces = [
     { binding = "SETTINGS", id = "5181f479e6d84fc9835c5195b08a7029"}
 ]
@@ -16,3 +15,5 @@ route = "auth-server.holo.host/*"
 kv_namespaces = [
     { binding = "SETTINGS", id = "56ecfe1cf54d43839e2c867798e5003b"}
 ]
+
+main = "dist/main.js"
