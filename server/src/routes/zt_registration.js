@@ -121,7 +121,7 @@ const handle = async req => {
     const { data } = payload
     const { email, holochain_agent_id, zerotier_address, holoport_url } = data
 
-    if (isVerifiedUser(email)) return addZeroTierMember(zerotier_address, holochain_agent_id, email)
+    if (await isVerifiedUser(email)) return addZeroTierMember(zerotier_address, holochain_agent_id, email)
 
     return respond(401)
   } catch (e) {
