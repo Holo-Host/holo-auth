@@ -78,7 +78,7 @@ const cleanUpMembers = (address, apiToken, networkId) => {
  */
 const isVerifiedUser = async (email) => {
   const mongodbApiKey = await SETTINGS.get('mongodb_api_key')
-  const mongodbApiUrl = "https://eu-central-1.aws.data.mongodb-api.com/app/data-fcrur/endpoint/data/v1/action/findOne"
+  const mongodbApiUrl = await SETTINGS.get('mongodb_api_url')
 
   let headers = new Headers()
   headers.append("Content-Type", "application/json")
@@ -93,7 +93,7 @@ const isVerifiedUser = async (email) => {
     }
   }
 
-  let resp = await fetch(mongodbApiUrl, {
+  let resp = await fetch(`${mongodbApiUrl}/action/findOne`, {
     headers,
     method: "POST",
     body: JSON.stringify(filter)
