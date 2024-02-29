@@ -8,13 +8,12 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    name: Deploy
+    name: Deploy server
     steps:
       - uses: actions/checkout@v2
       - name: Publish to alphaNet
-        uses: cloudflare/wrangler-action@2.0.0
+        uses: cloudflare/wrangler-action@3
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
-          preCommands: 'yarn add @cloudflare/kv-asset-handler'
           workingDirectory: 'server'
           environment: alphanet
