@@ -158,6 +158,9 @@ async fn send_failure_email(email: String, data: String) -> Fallible<()> {
     send_email(email, data, false).await
 }
 async fn send_email(email: String, data: String, success: bool) -> Fallible<()> {
+    info!("email: {:?}", email);
+    info!("data: {:?}", data);
+    info!("success: {:?}", success);
     let payload = NotifyPayload {
         email,
         success,
