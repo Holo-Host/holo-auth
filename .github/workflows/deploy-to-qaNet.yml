@@ -1,9 +1,9 @@
-name: Continuous Deployment to alphaNet
+name: Continuous Deployment to qaNet
 
 on:
   push:
     branches:
-      - main
+      - QA
 
 jobs:
   deploy:
@@ -11,9 +11,9 @@ jobs:
     name: Deploy server
     steps:
       - uses: actions/checkout@v2
-      - name: Publish to alphaNet
+      - name: Publish to qaNet
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           workingDirectory: 'server'
-          environment: alphanet
+          environment: qanet

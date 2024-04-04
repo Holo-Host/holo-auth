@@ -1,7 +1,8 @@
 name = "devnet-auth-server"
 account_id = "18ff2b4e6205b938652998cfca0d8cff"
-route = "devnet-auth-server.holo.host/*"
+route = "dev-auth-server.holotest.net/*"
 compatibility_date = "2024-02-19"
+main = "dist/main.js"
 kv_namespaces = [
     { binding = "SETTINGS", id = "5181f479e6d84fc9835c5195b08a7029"}
 ]
@@ -13,7 +14,12 @@ command = "npm install && npm run build"
 name = "auth-server"
 route = "auth-server.holo.host/*"
 kv_namespaces = [
-    { binding = "SETTINGS", id = "5181f479e6d84fc9835c5195b08a7029"}
+    { binding = "SETTINGS", id = "56ecfe1cf54d43839e2c867798e5003b"}
 ]
 
-main = "dist/main.js"
+[env.qanet]
+name = "qa-auth-server"
+route = "qa-auth-server.holotest.net/*"
+kv_namespaces = [
+    { binding = "SETTINGS", id = "1cfdf3a9b75545408f9058d846648349"}
+]
