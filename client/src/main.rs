@@ -45,6 +45,38 @@ fn zt_auth_done_notification_path() -> String {
     }
 }
 
+fn registration_error_flag_path() -> String {
+    match env::var("REG_ERROR_FLAG_PATH") {
+        Ok(path) => path,
+        _ => "/var/lib/holo-auth/registration-error-sent".to_string(),
+    }
+}
+
+fn write_error_flag(error_message: &str) -> Result<(), Error> {
+    let path = registration_error_flag_path();
+    let mut file = File::create(&path)?;
+    file.write_all(error_message.as_bytes())?;
+    Ok(())
+}
+
+fn read_error_flag() -> Result<Option<String>, Error> {
+    let path = registration_error_flag_path();
+    match fs::read_to_string(&path) {
+        Ok(contents) => Ok(Some(contents)),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(e) => Err(e.into()),
+    }
+}
+
+fn clear_error_flag() -> Result<(), Error> {
+    let path = registration_error_flag_path();
+    if Path::new(&path).exists() {
+        fs::remove_file(path).map_err(Into::into) 
+    } else {
+        Ok(())
+    }
+}
+
 fn device_bundle_password() -> Option<String> {
     match env::var("DEVICE_BUNDLE_PASSWORD") {
         Ok(pass) => Some(pass),
@@ -153,10 +185,22 @@ struct NotifyPayload {
     success: bool,
     data: String,
 }
+
 async fn send_failure_email(email: String, data: String) -> Fallible<()> {
-    info!("Sending Failure Email to: {:?}", email);
-    send_email(email, data, false).await
+    match read_error_flag()? {
+        Some(existing_error) if existing_error == data => {
+            println!("Error email already sent for this error, skipping.");
+            Ok(())
+        },
+        _ => {
+            info!("Sending Failure Email to: {:?}", email);
+            send_email(email.clone(), data.clone(), false).await?;
+            write_error_flag(&data)?;
+            Ok(())
+        }
+    }
 }
+
 async fn send_email(email: String, data: String, success: bool) -> Fallible<()> {
     let payload = NotifyPayload {
         email,
@@ -288,5 +332,12 @@ async fn main() -> Fallible<()> {
         thread::sleep(backoff);
         backoff += backoff;
     }
+
+    // Clear any error flag after successful execution of all steps
+    if let Err(e) = clear_error_flag() {
+        error!("Failed to clear error flag: {}", e);
+        return Err(e.into());
+    }
+
     Ok(())
 }
