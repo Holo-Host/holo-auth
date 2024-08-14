@@ -15,7 +15,7 @@ use zerotier_api::Identity;
 mod validation;
 use validation::init_validation;
 
-fn get_holoport_url(id: PublicKey) -> String {
+fn get_holoport_url(id: VerifyingKey) -> String {
     if let Ok(network) = env::var("HOLO_NETWORK") {
         if network == "devNet" {
             return format!("https://{}.holohost.dev", public_key::to_base36_id(&id));
@@ -56,7 +56,10 @@ lazy_static! {
     static ref CLIENT: Client = Client::new();
 }
 
-fn serialize_holochain_agent_id<S>(public_key: &PublicKey, serializer: S) -> Result<S::Ok, S::Error>
+fn serialize_holochain_agent_id<S>(
+    public_key: &VerifyingKey,
+    serializer: S,
+) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
@@ -64,7 +67,7 @@ where
 }
 
 fn serialize_holochain_agent_pub_key<S>(
-    public_key: &PublicKey,
+    public_key: &VerifyingKey,
     serializer: S,
 ) -> Result<S::Ok, S::Error>
 where
@@ -102,7 +105,7 @@ fn get_hpos_config() -> Fallible<Config> {
 struct ZTData {
     email: String,
     #[serde(serialize_with = "serialize_holochain_agent_id")]
-    holochain_agent_id: PublicKey,
+    holochain_agent_id: VerifyingKey,
     zerotier_address: zerotier_api::Address,
     holoport_url: String,
 }
@@ -112,7 +115,7 @@ struct ZTPayload {
     signature: String,
 }
 
-async fn try_zerotier_auth(config: &Config, holochain_public_key: PublicKey) -> Fallible<()> {
+async fn try_zerotier_auth(config: &Config, holochain_public_key: VerifyingKey) -> Fallible<()> {
     match config {
         Config::V2 { settings, .. } => {
             let zerotier_identity = Identity::read_default()?;
@@ -124,7 +127,7 @@ async fn try_zerotier_auth(config: &Config, holochain_public_key: PublicKey) -> 
                 holoport_url: get_holoport_url(holochain_public_key),
             };
 
-            let zerotier_keypair: Keypair = zerotier_identity.try_into()?;
+            let zerotier_keypair: SigningKey = zerotier_identity.try_into()?;
             let data_bytes = serde_json::to_vec(&data)?;
             let zerotier_signature = zerotier_keypair.sign(&data_bytes[..]);
             let url = format!("{}/v1/zt_registration", env::var("AUTH_SERVER_URL")?);
@@ -142,7 +145,7 @@ async fn try_zerotier_auth(config: &Config, holochain_public_key: PublicKey) -> 
             info!("auth-server response: {:?}", resp);
             File::create(zt_auth_done_notification_path())?;
         }
-        Config::V1 { .. } => return Err(AuthError::ConfigVersionError.into()),
+        _ => return Err(AuthError::ConfigVersionError.into()),
     }
     Ok(())
 }
@@ -175,7 +178,7 @@ async fn send_email(email: String, data: String, success: bool) -> Fallible<()> 
 struct Registration {
     registration_code: String,
     #[serde(serialize_with = "serialize_holochain_agent_pub_key")]
-    agent_pub_key: PublicKey,
+    agent_pub_key: VerifyingKey,
     email: String,
     payload: RegistrationPayload,
 }
@@ -202,7 +205,10 @@ impl fmt::Display for RegistrationError {
     }
 }
 
-async fn try_registration_auth(config: &Config, holochain_public_key: PublicKey) -> Fallible<()> {
+async fn try_registration_auth(
+    config: &Config,
+    holochain_public_key: VerifyingKey,
+) -> Fallible<()> {
     match config {
         Config::V2 {
             registration_code,
@@ -239,7 +245,8 @@ async fn try_registration_auth(config: &Config, holochain_public_key: PublicKey)
                 }
             }
         }
-        Config::V1 { settings, .. } => {
+        // todo: update to use v3 soon
+        Config::V3 { settings, .. } | Config::V1 { settings, .. } => {
             send_failure_email(
                 settings.admin.email.clone(),
                 AuthError::ConfigVersionError.to_string(),
