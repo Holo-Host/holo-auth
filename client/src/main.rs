@@ -117,7 +117,7 @@ struct ZTPayload {
 
 async fn try_zerotier_auth(config: &Config, holochain_public_key: VerifyingKey) -> Fallible<()> {
     match config {
-        Config::V2 { settings, .. } => {
+        Config::V3 { settings, .. } | Config::V2 { settings, .. } => {
             let zerotier_identity = Identity::read_default()?;
 
             let data = ZTData {
@@ -210,7 +210,12 @@ async fn try_registration_auth(
     holochain_public_key: VerifyingKey,
 ) -> Fallible<()> {
     match config {
-        Config::V2 {
+        Config::V3 {
+            registration_code,
+            settings,
+            ..
+        }
+        | Config::V2 {
             registration_code,
             settings,
             ..
@@ -245,8 +250,7 @@ async fn try_registration_auth(
                 }
             }
         }
-        // todo: update to use v3 soon
-        Config::V3 { settings, .. } | Config::V1 { settings, .. } => {
+        Config::V1 { settings, .. } => {
             send_failure_email(
                 settings.admin.email.clone(),
                 AuthError::ConfigVersionError.to_string(),
