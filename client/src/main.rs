@@ -17,32 +17,8 @@ use std::fs::OpenOptions;
 use std::io::Read;
 use validation::init_validation;
 
-const FLAG_FILE: &str = "/var/lib/holo-auth/holo-auth-status";
 const SUCCESS_FLAG: &str = "SUCCESS";
 const FAIL_FLAG: &str = "FAIL";
-
-fn read_flag_file() -> Option<String> {
-    if Path::new(FLAG_FILE).exists() {
-        let mut file = File::open(FLAG_FILE).expect("Failed to open flag file");
-        let mut contents = String::new();
-        file.read_to_string(&mut contents)
-            .expect("Failed to read flag file");
-        Some(contents)
-    } else {
-        None
-    }
-}
-
-fn write_flag_file(flag: &str) {
-    let mut file = OpenOptions::new()
-        .write(true)
-        .create(true)
-        .truncate(true) // Overwrite the file
-        .open(FLAG_FILE)
-        .expect("Failed to open flag file");
-    file.write_all(flag.as_bytes())
-        .expect("Failed to write flag file");
-}
 
 fn get_holoport_url(id: VerifyingKey) -> String {
     if let Ok(network) = env::var("HOLO_NETWORK") {
@@ -51,6 +27,13 @@ fn get_holoport_url(id: VerifyingKey) -> String {
         }
     }
     format!("https://{}.holohost.net", public_key::to_base36_id(&id))
+}
+
+fn holo_auth_flag_file() -> String {
+    match env::var("HOLO_AUTH_FLAG_FILE") {
+        Ok(file) => file,
+        _ => "/var/lib/holo-auth/holo-auth-status".to_string(),
+    }
 }
 
 fn mem_proof_server_url() -> String {
@@ -79,6 +62,31 @@ fn device_bundle_password() -> Option<String> {
         Ok(pass) => Some(pass),
         _ => None,
     }
+}
+
+fn read_flag_file() -> Option<String> {
+    let file_path = holo_auth_flag_file();
+    if Path::new(&file_path).exists() {
+        let mut file = File::open(file_path).expect("Failed to open flag file");
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)
+            .expect("Failed to read flag file");
+        Some(contents)
+    } else {
+        None
+    }
+}
+
+fn write_flag_file(flag: &str) {
+    let file_path = holo_auth_flag_file();
+    let mut file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true) // Overwrite the file
+        .open(file_path)
+        .expect("Failed to open flag file");
+    file.write_all(flag.as_bytes())
+        .expect("Failed to write flag file");
 }
 
 lazy_static! {
