@@ -13,7 +13,36 @@ use tracing_subscriber::{EnvFilter, FmtSubscriber};
 use uuid::Uuid;
 use zerotier_api::Identity;
 mod validation;
+use std::fs::OpenOptions;
+use std::io::Read;
 use validation::init_validation;
+
+const FLAG_FILE: &str = "/var/lib/holo-auth/holo-auth-status";
+const SUCCESS_FLAG: &str = "SUCCESS";
+const FAIL_FLAG: &str = "FAIL";
+
+fn read_flag_file() -> Option<String> {
+    if Path::new(FLAG_FILE).exists() {
+        let mut file = File::open(FLAG_FILE).expect("Failed to open flag file");
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)
+            .expect("Failed to read flag file");
+        Some(contents)
+    } else {
+        None
+    }
+}
+
+fn write_flag_file(flag: &str) {
+    let mut file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true) // Overwrite the file
+        .open(FLAG_FILE)
+        .expect("Failed to open flag file");
+    file.write_all(flag.as_bytes())
+        .expect("Failed to write flag file");
+}
 
 fn get_holoport_url(id: VerifyingKey) -> String {
     if let Ok(network) = env::var("HOLO_NETWORK") {
@@ -158,6 +187,10 @@ struct NotifyPayload {
 }
 async fn send_failure_email(email: String, data: String) -> Fallible<()> {
     info!("Sending Failure Email to: {:?}", email);
+    if read_flag_file() != Some(SUCCESS_FLAG.to_string()) {
+        return Ok(());
+    }
+    write_flag_file(FAIL_FLAG);
     send_email(email, data, false).await
 }
 async fn send_email(email: String, data: String, success: bool) -> Fallible<()> {
@@ -299,5 +332,6 @@ async fn main() -> Fallible<()> {
         thread::sleep(backoff);
         backoff += backoff;
     }
+    write_flag_file(SUCCESS_FLAG);
     Ok(())
 }
