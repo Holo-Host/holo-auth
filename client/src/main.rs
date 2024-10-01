@@ -195,10 +195,11 @@ struct NotifyPayload {
 }
 async fn send_failure_email(email: String, data: String) -> Fallible<()> {
     info!("Sending Failure Email to: {:?}", email);
-    if read_flag_file() != Some(SUCCESS_FLAG.to_string()) {
+    let flag = read_flag_file();
+    write_flag_file(FAIL_FLAG);
+    if flag != Some(SUCCESS_FLAG.to_string()) {
         return Ok(());
     }
-    write_flag_file(FAIL_FLAG);
     send_email(email, data, false).await
 }
 async fn send_email(email: String, data: String, success: bool) -> Fallible<()> {
